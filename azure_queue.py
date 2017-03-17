@@ -6,9 +6,13 @@ queue_service.create_queue('pi-walk-items')
 
 print queue_service.exists('pi-walk-items')
 
-message = 'this is it'
+message = '{"address": "C449C2FA3DB2",' + \
+    '"rotations" : 10, "duration": 16, "year":17,"month":3,"day":17,"hour":7,"minute":13}'
 encoded_msg = b64encode(message)
 encoded_msg_text = encoded_msg.decode()
 
+print("start")
+
 queue_service.put_message('pi-walk-items',encoded_msg_text)
+print("end")
 
