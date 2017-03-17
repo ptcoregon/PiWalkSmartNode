@@ -1,17 +1,32 @@
+#!/usr/bin/env python
+
 from bluepy.btle import Scanner, DefaultDelegate, Peripheral, Service, UUID, Characteristic
 import struct
 
-from azure.storage.queue import QueueService
+from azure.storage.queue import QueueService , QueueMessage
 from base64 import b64encode
 
-queue_service = QueueService(account_name='walksmart1',account_key='ZwEU627jtc7HbKxmzWvovaepw99Y47jP4WrVcCqR/i0xwQNo2Q0uSHnWUkBQhWH6rXFNt5JUnJB1S5F2Mbso1w==')
-queue_service.create_queue('pi-walk-items')
+import sys
+import os
 
-exists = queue_service.exists('pi-walk-items')
-if exists == False:
-    print("Queue Does Not Exist")
-else:
-    print("Queue Set Up!")
+def restartScript():
+    print sys.argv[0]
+    os.execv(__file__,['python'] + [sys.argv[0]])
+
+try:
+    queue_service = QueueService(account_name='walksmart1',account_key='ZwEU627jtc7HbKxmzWvovaepw99Y47jP4WrVcCqR/i0xwQNo2Q0uSHnWUkBQhWH6rXFNt5JUnJB1S5F2Mbso1w==')
+    queue_service.create_queue('pi-walk-items',timeout=5)
+    
+    exists = queue_service.exists('pi-walk-items')
+    if exists == False:
+        print("Queue Does Not Exist")
+    else:
+        print("Queue Set Up!")
+except Exception, e:
+    print "Queue Exception: ", e
+    restartScript()
+    
+
 
 
 data_char_uuid = UUID('00000100-0000-1000-8000-00805f9b34fb')
@@ -22,8 +37,6 @@ data_return_char = None
 device = None
 
 address = None
-
-connected = False
 
 def connect(scanEntry):
 
@@ -53,7 +66,7 @@ def connect(scanEntry):
     except Exception, e:
         print("disconnected")
         print(str(e))
-        scan()
+        #scan()
     
         
     
@@ -79,8 +92,6 @@ def readData():
         
         if f[0] > 0 and f[0] < 60:
 
-            writeData(f)
-            
             rot = f[7] << 8 | f[8]
             dur = f[5] << 8 | f[6]
 
@@ -98,8 +109,17 @@ def readData():
             print(str(message))
             encoded_msg = b64encode(message)
             encoded_msg_text = encoded_msg.decode()
-            queue_service.put_message('pi-walk-items',encoded_msg_text)
+            try:
+                queue_service.put_message(queue_name='pi-walk-items',content=encoded_msg_text,timeout=5)
+            except Exception, e:
+                print str(e)
+                restartScript()
             print ("sent to queue")
+
+                
+
+            writeData(f)
+            
         elif f[0] == 0:
             d = bytearray([1,1,1,1,1,1,1,1,1,1,1,1,1])
             writeData(d)
@@ -107,7 +127,6 @@ def readData():
             writeData(f)
             global device
             device.disconnect()
-            scan()
         else:
             print("invalid data")
             
@@ -125,22 +144,26 @@ class ScanDelegate(DefaultDelegate):
             for (adtype,desc,value) in dev.getScanData():
                 if value == 'WalkSmart':
                     print "Discovered WalkSmart: ", dev.addr
-                    global connected
-                    connected = True
-                    #stopScan()
+                    global scanner
+                    scanner.clear()
                     connect(dev)
 
 def scan():
     print("Start Scanning")
+    global scanner
     scanner.start()
-    global connected
-    while True
+    count = 0
+    while True:
         print("process")
         scanner.process()
+        count = count + 1
+        if count == 3:
+            break
+        
     print("out of loop")
-##    scanner.stop()
-##    scanner.clear()
-##    scanner.start()
+    restartScript()
+
+
 
 def stopScan():
     print("Stopping Scan")
@@ -153,22 +176,4 @@ if __name__ == "__main__":
     scanner = Scanner().withDelegate(ScanDelegate())
     scan()
 
-##try:
-##    scanner.start()
-##    scanner.process(10)
-##    scanner.stop()
-##    scanner.clear()
-##except Exception, e:
-##    print("scan error")
-##    print(str(e))
-##    scanner = Scanner().withDelegate(ScanDelegate())
-##    scanner.scan(10)
 
-
-
-
-    
-##for dev in devices:
-##    print "Device %s (%s), RSSI=%d dB" % (dev.addr, dev.addrType, dev.rssi)
-##    for (adtype, desc, value) in dev.getScanData():
-##        print "  %s : %s = %s" % (adtype, desc, value)
