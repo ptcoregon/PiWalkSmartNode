@@ -6,29 +6,13 @@ import struct
 from azure.storage.queue import QueueService , QueueMessage
 from base64 import b64encode
 
+from wireless import Wireless
+
 import sys
 import os
+import time
 
-def restartScript():
-    print sys.argv[0]
-    os.execv(__file__,['python'] + [sys.argv[0]])
-
-try:
-    queue_service = QueueService(account_name='walksmart1',account_key='ZwEU627jtc7HbKxmzWvovaepw99Y47jP4WrVcCqR/i0xwQNo2Q0uSHnWUkBQhWH6rXFNt5JUnJB1S5F2Mbso1w==')
-    queue_service.create_queue('pi-walk-items',timeout=5)
-    
-    exists = queue_service.exists('pi-walk-items')
-    if exists == False:
-        print("Queue Does Not Exist")
-    else:
-        print("Queue Set Up!")
-except Exception, e:
-    print "Queue Exception: ", e
-    restartScript()
-    
-
-
-
+#global variables
 data_char_uuid = UUID('00000100-0000-1000-8000-00805f9b34fb')
 data_return_char_uuid = UUID('00000101-0000-1000-8000-00805f9b34fb')
 
@@ -37,6 +21,102 @@ data_return_char = None
 device = None
 
 address = None
+
+last_wifi_file_path = None
+
+queue_service = None
+
+def setupQueue():
+    print "Try to set up Queue"
+    try:
+        global queue_service
+        queue_service = QueueService(account_name='walksmart1',account_key='ZwEU627jtc7HbKxmzWvovaepw99Y47jP4WrVcCqR/i0xwQNo2Q0uSHnWUkBQhWH6rXFNt5JUnJB1S5F2Mbso1w==')
+        queue_service.create_queue('pi-walk-items',timeout=5)
+        
+        exists = queue_service.exists('pi-walk-items')
+        if exists == False:
+            print("Queue Does Not Exist")
+        else:
+            print("Queue Set Up!")
+    except Exception, e:
+        print "Queue Exception: ", e
+        global last_wifi_file_path
+        p = wifiPathFile()
+        status = connectToWifi(p)
+        if status == False:
+            p = wifiPathBluetooth()
+            last_wifi_file_path = p
+            status = connectToWifi(p)
+            if status == False:
+                #need new SSID and Password for wifi network!
+                print "Wait for new file and restart!"
+                samePath = True
+                while samePath == True:
+                    time.sleep(5)
+                    p = wifiPathBluetooth()
+                    print p
+                    print last_wifi_file_path
+                    if p != last_wifi_file_path:
+                        samePath = False
+                        print "new file"
+                        
+                setupQueue()
+            else:
+                setupQueue()
+        else:
+            setupQueue()
+                
+def restartScript():
+    print sys.argv[0]
+    os.execv(__file__,['python'] + [sys.argv[0]])
+
+def wifiPathBluetooth():
+    greatestTime = 0
+    fileToOpen = None
+
+    for filename in os.listdir('/home/pi/bluetooth'):
+        path = os.path.join('/home/pi/bluetooth',filename)
+        if filename.endswith(".txt"):
+            time = os.path.getmtime(path)
+            if  time > greatestTime:
+                fileToOpen = path
+                greatestTime = time
+
+    return fileToOpen
+
+def wifiPathFile():
+    path = '/home/pi/wifi/wifi.txt'
+    return path
+
+def getPassSSIDfromFile(path):
+    f = open(path)
+    print f
+    ssid = f.readline()
+    password = f.readline()
+    ssid = ssid.strip('\r\n')
+    ssid = ssid.strip('\n\r')
+    password = password.strip('\r\n')
+    password = password.strip('\n\r')
+    f.close()
+    print [ssid,password]
+
+    return [ssid,password]
+
+def connectToWifi(path):
+    lines = getPassSSIDfromFile(path)
+    status = None
+    try:
+        w = Wireless()
+        status = w.connect(lines[0],lines[1])
+        print status
+        if status == False:
+            print "Unsuccessful"
+        else:
+            print "Successful Connection"
+    except Exception, e:
+        print str(e)
+    
+    return status
 
 def connect(scanEntry):
 
@@ -156,10 +236,10 @@ def scan():
 
     count = 0
     while True:
-        print("process")
+        print "process: ",count
         scanner.process()
         count = count + 1
-        if count == 3:
+        if count == 20:
             break
         
     print("out of loop")
@@ -174,6 +254,7 @@ def stopScan():
     scanner.clear()
 
 if __name__ == "__main__":
+    setupQueue()
     global scanner
     scanner = Scanner().withDelegate(ScanDelegate())
     scan()
