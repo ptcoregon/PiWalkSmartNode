@@ -150,8 +150,10 @@ class ScanDelegate(DefaultDelegate):
 
 def scan():
     print("Start Scanning")
+
     global scanner
     scanner.start()
+
     count = 0
     while True:
         print("process")
