@@ -1,0 +1,32 @@
+connect to internet
+git clone https://www.github.com/ptcoregon/PiWalkSmartNode
+sudo apt-get install python-pip libglib2.0-dev
+sudo pip install -U pip setuptools
+sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+sudo pip install cryptography
+(can take a really long time)
+sudo pip install azure-storage
+cd PiWalkSmartNode
+sudo pip install git+https://github.com/IanHarvey/bluepy.git
+sudo python walksmart.py
+
+
+
+sudo apt-get install obexpushd
+sudo nano /etc/systemd/system/dbus-org.bluez.service
+(add -C to ExecStart=/usr/lib/bluetooth/bluetoothd -C)
+sudo mkdir /bluetooth
+sudo obexpushd -B -o /bluetooth -n
+
+(in different command line terminal)
+sudo bluetoothctl
+discoverable on
+
+PYTHON FOR MAKING DISCOVERABLE
+
+import subprocess
+subprocess.call(['sudo','hciconfig','hci0','piscan'])
+AND THEN TURNING OFF
+subprocess.call(['sudo','hciconfig','hci0','noscan'])
+
+sudo pip install wireless
