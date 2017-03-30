@@ -2,6 +2,7 @@ var bleno = require('bleno');
 var os = require('os');
 var util = require('util');
 var bleData = require('./wifi_data.js');
+var events = require('../event_module.js');
 
 var BlenoCharacteristic = bleno.Characteristic;
 
@@ -17,9 +18,11 @@ var wifiPasswordCharacteristic = function() {
 			console.log("onWriteRequest");
 			
 			value =  data.toString('utf8');
-			bleData.setPassword(value);
+			bleData.password = value;
 			
 			console.log(bleData.password);
+			
+			events.setPassword();
 			
 			var result = this.RESULT_SUCCESS;
 			callback(result);

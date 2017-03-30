@@ -1,11 +1,17 @@
 var noble = require('noble');
 
+
+
 noble.on('stateChange',function(state){
 	console.log(state);
 	if (state == "poweredOn")
 	{
 		noble.startScanning([],false,function(error){
 			console.log(error);
+			if (!error)
+			{
+				
+			}
 		});
 	}
 });
