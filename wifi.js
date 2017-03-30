@@ -26,7 +26,6 @@ var commands = {
     wpaCli: 'sudo /sbin/wpa_cli',
 }
 
-var exec = require('child_process').exec;
 
 var wifi = {
 
