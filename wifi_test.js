@@ -1,47 +1,63 @@
 var wifi = require("./wifi.js");
+var bleData = require('./characteristics/wifi_data.js');
+var ble = require('./phone_connect.js');
 
-console.log("start");
+var events = require('events');
 
-if (!wifi.isConnected()) //not connected
-{
-	wifi.disconnect();
-	wifi.reconnect();
-	setTimeout(function(){ //wait for reconnect
-		
-		var connected = wifi.isConnected();
-		console.log(connected);
-	
-		if(!connected) //if it doesn't reconnect
-		{
-			console.log("didn't reconnect");
-			getSSIDandPassword();
-		} else {
-			console.log("reconnected!");
-		}
-		
-	}, 8000);
-	
-}
 
-function getSSIDandPassword(){
+
+module.exports = function(){
+	
+	var eventEmitter = new events.EventEmitter();
 	
 	
-	wifi.connect("TurtleIsland","grandforks");
 	
-	
-	setTimeout(function(){ //wait for connection
+	console.log("start wifi");
+
+	if (!wifi.isConnected()) //not connected
+	{
+		wifi.disconnect();
+		wifi.reconnect();
+		setTimeout(function(){ //wait for reconnect
+			
+			var connected = wifi.isConnected();
+			console.log(connected);
 		
-		var connected = wifi.isConnected();
-		console.log(connected);
-	
-		if(connected)
-		{
-			console.log("Sent success to phone");
-		} else {
-			console.log("Send failure to phone");
-		}
+			if(!connected) //if it doesn't reconnect
+			{
+				console.log("didn't reconnect");
+				ble.initialize();
+			} else {
+				console.log("reconnected!");
+			}
+			
+		}, 12000);
 		
-	}, 8000);
-	
-	
+	}
+
+	bleData.emitter.on('newCreds', function(){
+		
+		console.log('try new creds');
+		wifi.connect(bleData.newSSID,bleData.password);
+		
+		
+		setTimeout(function(){ //wait for connection
+			
+			var connected = wifi.isConnected();
+			console.log(connected);
+		
+			if(connected)
+			{
+				console.log("success");
+				bleData.status = 0x01;
+			} else {
+				bleData.status = 0x03;
+				console.log("Send failure to phone");
+			}
+			
+		}, 12000);
+		
+		
+	});
+
 }

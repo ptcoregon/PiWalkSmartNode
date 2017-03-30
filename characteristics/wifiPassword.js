@@ -17,7 +17,7 @@ var wifiPasswordCharacteristic = function() {
 			console.log("onWriteRequest");
 			
 			value =  data.toString('utf8');
-			bleData.password = value;
+			bleData.setPassword(value);
 			
 			console.log(bleData.password);
 			
