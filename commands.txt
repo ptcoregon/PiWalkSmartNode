@@ -30,3 +30,17 @@ AND THEN TURNING OFF
 subprocess.call(['sudo','hciconfig','hci0','noscan'])
 
 sudo pip install wireless
+
+NANO FOR REMOVING WIFI NETWORK AND PASSWORD
+cd /etc/wpa_supplicant
+sudo nano wpa_supplicant.conf
+(remove network object)
+
+WPA_CLI
+
+sudo wpa_cli add_network
+sudo wpa_cli remove_network 0
+
+
+sudo ifup wlan0
+sudo ifdown wlan0
