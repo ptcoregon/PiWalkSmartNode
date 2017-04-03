@@ -1,17 +1,14 @@
 connect to internet
 git clone https://www.github.com/ptcoregon/PiWalkSmartNode
-sudo apt-get install python-pip libglib2.0-dev
-sudo pip install -U pip setuptools
-sudo apt-get install build-essential libssl-dev libffi-dev python-dev
-sudo pip install cryptography
-(can take a really long time)
-sudo pip install azure-storage
-cd PiWalkSmartNode
-sudo pip install git+https://github.com/IanHarvey/bluepy.git
-sudo python walksmart.py
+
+sudo npm install forever -g
 
 
 
+
+
+
+OLD to get Bluetooth File Transfer Working
 sudo apt-get install obexpushd
 sudo nano /etc/systemd/system/dbus-org.bluez.service
 (add -C to ExecStart=/usr/lib/bluetooth/bluetoothd -C)
@@ -44,3 +41,16 @@ sudo wpa_cli remove_network 0
 
 sudo ifup wlan0
 sudo ifdown wlan0
+
+
+
+OLD!!!!!
+sudo apt-get install python-pip libglib2.0-dev
+sudo pip install -U pip setuptools
+sudo apt-get install build-essential libssl-dev libffi-dev python-dev
+sudo pip install cryptography
+(can take a really long time)
+sudo pip install azure-storage
+cd PiWalkSmartNode
+sudo pip install git+https://github.com/IanHarvey/bluepy.git
+sudo python walksmart.py

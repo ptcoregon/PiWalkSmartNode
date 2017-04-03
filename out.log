@@ -1,0 +1,61 @@
+start wifi
+undefined
+set connected
+Queue Exists
+queue ready
+
+
+Start the WalkSmart Scan
+Adding stored data:
+poweredOn
+something started a scan
+null
+undefined
+undefined
+undefined
+undefined
+PR BT 5F68
+WalkSmart
+scan stopped
+connected to WalkSmart
+discover services
+null
+null
+c4:49:c2:fa:3d:b2
+written
+{ address: 'C449C2FA3DB2',
+  rotations: 5,
+  duration: 3,
+  year: 17,
+  month: 4,
+  day: 3,
+  hour: 7,
+  minute: 24,
+  id: 'C449C2FA3DB2531743724' }
+Write
+written
+{ address: 'C449C2FA3DB2',
+  rotations: 11,
+  duration: 11,
+  year: 17,
+  month: 4,
+  day: 3,
+  hour: 7,
+  minute: 26,
+  id: 'C449C2FA3DB211111743726' }
+Write
+written
+Write
+written
+disconnected from walksmart
+
+something started a scan
+null
+undefined
+undefined
+undefined
+undefined
+Successfully Added to Queue
+Successfully Added to Queue
+undefined
+PR BT 5F68

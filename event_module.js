@@ -19,6 +19,11 @@ module.exports =
 	setQueueReady: function(){
 		console.log("queue ready");
 		this,emitter.emit("queueReady");
+	},
+	
+	setQueueError: function(){
+		console.log("queue error");
+		this.emitter.emit("queueError");
 	}
 	
 

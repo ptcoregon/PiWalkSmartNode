@@ -6,17 +6,45 @@ var execSync = require('child_process').execSync;
 var queue = require('./azure_queue.js');
 var events = require('./event_module.js');
 
+//var forever = require('forever-monitor');
+
 var noble = null;
 
 var connectionTimeout = null;
 
 var currentPeripheral = null;
 
+/*
+var child = new (forever.Monitor)('walksmartnode1.js',{
+	args:[],
+	killTree:true
+});
+
+
+child.on('exit',function(){
+	console.log("Program has exited permanently");
+});
+
+
+child.on('restart',function(){
+	console.log("Program restarted");
+});
+
+
+child.on('exit:code',function(code){
+	console.log("Forever detected script exited with code: " + code);
+});
+
+child.start();
+* */
+
+
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
 	queue.initialize();
 		
 });
+
 
 events.emitter.on("queueReady",function(){
 	
@@ -26,6 +54,23 @@ events.emitter.on("queueReady",function(){
 	console.log(m.toString('utf8'));
 	
 	startScan();
+	
+	events.emitter.once("queueError",function()
+	{
+		//if (currentPeripheral)
+		//{
+			//disconnect();
+		//}
+		
+		//setTimeout(function(){
+			//noble.stopScanning();
+			//wifi.setup(); 
+		//},1000);
+		
+		process.exit();
+		
+	});
+
 
 });
 
@@ -122,18 +167,18 @@ function discoverServices(peripheral){
 		console.log(peripheral.address);
 		//console.log(characteristics);
 
-		setupDataTransfer(characteristics);
+		setupDataTransfer(peripheral,characteristics);
 	});
 	
 }
 
-function setupDataTransfer(chars){
+function setupDataTransfer(peripheral,chars){
 	
 	var lastDataRead = new Buffer([0,0,0]);
 	
 	chars[0].on('read',function(data,isNotification){
 
-				handleData(data);
+				handleData(peripheral,data);
 				lastDataRead = data;
 				console.log("Write");
 				
@@ -159,8 +204,31 @@ function setupDataTransfer(chars){
 	chars[1].write(new Buffer([1,1,1,1,1,1,1,1,1,1,1,1,1]),false)
 }
 
-function handleData(data){
-	console.log(data);
+function handleData(device,data){
+	//device is the name as peripheral
+	
+	if (data[0] > 0 && data[0] < 50)
+	{
+	
+		var year = data[0];
+		var month = data[1];
+		var day = data[2];
+		var hour = data[3];
+		var minute = data[4];
+		
+		var duration = (data[5] << 8) | (data[6] << 0);
+		var rotations = (data[7] << 8) | (data[8] << 0);
+		
+		var address = device.address.replace(/:/g,"").toUpperCase().trim();
+		
+		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
+		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute}
+		
+		queue.add(obj);
+		
+		console.log(obj);
+	}
+	
 	return;
 }
 
