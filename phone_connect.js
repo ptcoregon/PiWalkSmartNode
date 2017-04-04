@@ -1,11 +1,15 @@
-
+var bleno = null;
 
 var exports = module.exports = {
 	
 	
 		
 	initialize: function(){
-		var bleno = require('bleno');
+		process.env['BLENO_DEVICE_NAME'] = 'WalkSmart Node';
+		
+		var led = require('./led');
+		
+		bleno = require('bleno');
 
 		var WifiService = require('./wifiservice');
 
@@ -17,7 +21,6 @@ var exports = module.exports = {
 		  console.log('on -> stateChange: ' + state);
 
 		  if (state === 'poweredOn') {
-
 			bleno.startAdvertising('WalkSmart Node', [service.uuid]);
 		  }
 		  else {
@@ -28,10 +31,12 @@ var exports = module.exports = {
 
 		bleno.on('disconnect',function(clientAddress){
 			console.log("Disconnected from " + clientAddress);
-			bleno.stopAdvertising();
+			bleno.startAdvertising('WalkSmart Node', [service.uuid]);
+			led.setOn();
 		});
 
 		bleno.on('advertisingStart', function(error) {
+			led.setOn();
 
 		  console.log('on -> advertisingStart: ' +
 			(error ? 'error ' + error : 'success')
@@ -45,6 +50,11 @@ var exports = module.exports = {
 		  }
 		});
 		
+	},
+	
+	disconnect : function(){
+		bleno.disconnect();
+		bleno.stopAdvertising();
 	}
 
 

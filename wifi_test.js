@@ -1,6 +1,7 @@
 var wifi = require("./wifi.js");
 var bleData = require('./characteristics/wifi_data.js');
 var ble = require('./phone_connect.js');
+var led = require('./led');
 
 var events = require('./event_module.js');
 
@@ -25,7 +26,9 @@ module.exports = {
 				if(!connected) //if it doesn't reconnect
 				{
 					console.log("didn't reconnect");
+					led.setOn();
 					ble.initialize();
+					
 				} else {
 					console.log("reconnected!");
 					events.setWifiConnected();
@@ -39,7 +42,7 @@ module.exports = {
 		}
 
 		events.emitter.on('newCreds', function(){
-			
+			led.blink(200);
 			console.log('try new creds');
 			wifi.connect(bleData.newSSID,bleData.password);
 			
@@ -51,12 +54,14 @@ module.exports = {
 			
 				if(connected)
 				{
+					ble.disconnect();
 					console.log("success");
 					bleData.status = 0x01;
 					events.setWifiConnected();
 				} else {
 					bleData.status = 0x05;
 					console.log("Send failure to phone");
+					led.setOn();
 				}
 				
 			}, 12000);
@@ -64,5 +69,19 @@ module.exports = {
 			
 		});
 
+	},
+	
+	startChecks(){
+		//check network connection every 30 seconds
+		setInterval(function(){
+			if (!wifi.isConnected()) //not connected
+			{
+				if (!wifi.isConnected()) //not connected
+				{
+					console.log("Wifi Disconnected!");
+					events.setQueueError();
+				}
+			}
+		},30000);
 	}
 }

@@ -1,42 +1,18 @@
 
 var wifi = require('./wifi_test.js');
+var led = require('./led.js');
+led.init();
 var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
 var queue = require('./azure_queue.js');
 var events = require('./event_module.js');
 
-//var forever = require('forever-monitor');
-
 var noble = null;
 
 var connectionTimeout = null;
 
 var currentPeripheral = null;
-
-/*
-var child = new (forever.Monitor)('walksmartnode1.js',{
-	args:[],
-	killTree:true
-});
-
-
-child.on('exit',function(){
-	console.log("Program has exited permanently");
-});
-
-
-child.on('restart',function(){
-	console.log("Program restarted");
-});
-
-
-child.on('exit:code',function(code){
-	console.log("Forever detected script exited with code: " + code);
-});
-
-child.start();
-* */
 
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
@@ -55,6 +31,8 @@ events.emitter.on("queueReady",function(){
 	
 	startScan();
 	
+	wifi.startChecks();
+	
 	events.emitter.once("queueError",function()
 	{
 		//if (currentPeripheral)
@@ -66,8 +44,10 @@ events.emitter.on("queueReady",function(){
 			//noble.stopScanning();
 			//wifi.setup(); 
 		//},1000);
-		
-		process.exit();
+		led.setOn();
+		setTimeout(function(){
+			process.exit();
+		},2000);
 		
 	});
 
@@ -89,6 +69,7 @@ function startScan(){
 		console.log(state);
 		if (state == "poweredOn")
 		{
+			led.blink(0);
 			noble.startScanning([],false,function(error){
 				console.log(error);
 			});
@@ -97,10 +78,10 @@ function startScan(){
 
 	noble.on('discover',function(peripheral){
 		var name = peripheral.advertisement.localName
-		console.log(name);
+		//console.log(name);
 		if (name == "WalkSmart")
 		{
-			
+			console.log("found walksmart");
 			noble.once('scanStop',function(){
 				console.log("scan stopped");
 				connectToWalkSmart(peripheral);
@@ -116,6 +97,7 @@ function startScan(){
 
 function disconnect(){
 	currentPeripheral.disconnect();
+	
 }
 
 function connectToWalkSmart(peripheral){
@@ -125,13 +107,14 @@ function connectToWalkSmart(peripheral){
 				
 				var m = execSync('sudo hciconfig hci0 reset');
 				console.log(m.toString('utf8'));
-				
+				led.blink(0);
 				noble.startScanning([],false,function(error){
 					console.log(error);
 				});
 			});
 			
 	peripheral.once('connect',function(){
+		led.blink(1000);
 		currentPeripheral = peripheral;
 		console.log("connected to WalkSmart");
 		
