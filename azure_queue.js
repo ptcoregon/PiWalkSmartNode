@@ -7,6 +7,8 @@ var queueService = null;
 
 var createAttempts = 0;
 
+//var objects = null;
+
 module.exports = {
 	
 	initialize : function(){
@@ -51,32 +53,51 @@ module.exports = {
 	addStoredData: function(){
 		console.log("Adding stored data:");
 		var self = this;
-		store.list(function(error,objects){
+		store.list(function(error,store_objects){
 			if (error){
-				throw error;
-			}
-			
-			var x = 0;
-			
-			events.emitter.once("connected",function()
+					console.log(error);
+				}
+			//objects = store_objects;
+			if (store_objects.length > 0)
 			{
-				console.log("exit addStoredData");
-				return;
-			});
-			
-			while(x < objects.length){
-				var obj = objects[x];
-				console.log(obj);
-				self.addToQueue(obj);
-				x++;		
+				self.addStoredData2(store_objects,0);
 			}
 		});
-		console.log("Done adding stored data.");
-		return;
+
+
+	},
+	
+	addStoredData2: function(objects,index){
+		var self = this;
+		var con = events.isConnected();
+		//console.log(con);
+		if (con == false)
+		{
+				
+			if (objects.length == 0)
+			{
+				events.setNoMoreStoredWalks(true);
+			} else {
+				var obj = objects[index];
+				console.log("adding to queue: " + obj.rotations);
+				self.addToQueue(obj);
+				
+				if ((index + 1) < objects.length)
+				{
+					setTimeout(function(){
+						self.addStoredData2(objects,index+1);
+					},50);
+				}
+			}
+		}
+		
+		
+		
 	},
 	
 	addToQueue: function(obj){
 		var self = this;
+		
 		
 		//obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
 		
@@ -84,11 +105,11 @@ module.exports = {
 		b64message = new Buffer(message).toString('base64');
 
 		//console.log(message);
-		var options = {'clientRequestTimeoutInMs':1800000};
+		var options = {'clientRequestTimeoutInMs':1800000,'maximumExecutionTimeInMs':180000};
 
 		queueService.createMessage('pi-walk-items',b64message,options,function(error){
 			if (!error){
-				console.log("Successfully Added to Queue");
+				console.log("Successfully Added to Queue: " + obj.rotations);
 				addAttempts = 0;
 				self.removeFromStore(obj);
 				return true;

@@ -2,9 +2,13 @@ var events = require('events');
 
 var emitter = new events.EventEmitter();
 
+var connected = false;
+
 module.exports = 
 {
 	emitter : emitter,
+	
+	noMoreStoredWalks : false,
 	
 	setPassword : function(pass){
 		console.log("set password");
@@ -28,7 +32,20 @@ module.exports =
 	
 	setConnected: function(){
 		console.log("set walksmart connected");
+		connected = true;
 		this.emitter.emit("connected");
+	},
+	
+	setDisconnected: function(){
+		connected = false;
+	},
+	
+	isConnected: function(){
+		return connected;
+	},
+	
+	setNoMoreStoredWalks : function(b){
+		this.noMoreStoredWalks = b;
 	}
 	
 

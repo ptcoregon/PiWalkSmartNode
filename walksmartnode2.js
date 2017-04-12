@@ -82,6 +82,7 @@ function startScan(){
 		if (name == "WalkSmart2")
 		{
 			console.log("found walksmart");
+			events.setConnected();
 			noble.once('scanStop',function(){
 				console.log("scan stopped");
 				connectToWalkSmart(peripheral);
@@ -108,6 +109,7 @@ function connectToWalkSmart(peripheral){
 				var m = execSync('sudo hciconfig hci0 reset');
 				console.log(m.toString('utf8'));
 				led.blink(0);
+				events.setDisconnected();
 				noble.startScanning([],false,function(error){
 					if (error) console.log(error);
 					queue.addStoredData();
@@ -120,7 +122,7 @@ function connectToWalkSmart(peripheral){
 		currentPeripheral = peripheral;
 		console.log("connected to WalkSmart");
 		
-		events.setConnected();
+		
 		
 		//connectionTimeout = setTimeout(function(){
 			//peripheral.disconnect();
@@ -150,8 +152,8 @@ function discoverServices(peripheral){
 	var serviceUUIDs = [data_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,data_return_char_uuid];
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
-		console.log(error);
-		console.log(peripheral.address);
+		if (error) console.log(error);
+		//console.log(peripheral.address);
 		//console.log(characteristics);
 		
 		setupDataTransfer(peripheral,characteristics);
