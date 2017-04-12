@@ -24,6 +24,11 @@ module.exports =
 	setQueueError: function(){
 		console.log("queue error");
 		this.emitter.emit("queueError");
+	},
+	
+	setConnected: function(){
+		console.log("set walksmart connected");
+		this.emitter.emit("connected");
 	}
 	
 

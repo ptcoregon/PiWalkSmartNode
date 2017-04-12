@@ -3,7 +3,8 @@ git clone https://www.github.com/ptcoregon/PiWalkSmartNode
 
 sudo npm install forever -g
 
-
+//HOW TO CALL ON STARTUP
+sudo nano /etc/rc.local
 
 
 

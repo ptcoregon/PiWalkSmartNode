@@ -44,7 +44,7 @@ module.exports = {
 			if (err) throw err;
 		});
 		
-		this.addToQueue(obj);
+		//this.addToQueue(obj);
 
 	},
 	
@@ -55,12 +55,24 @@ module.exports = {
 			if (error){
 				throw error;
 			}
-			for (var x = 0; x < objects.length; x++){
+			
+			var x = 0;
+			
+			events.emitter.once("connected",function()
+			{
+				console.log("exit addStoredData");
+				return;
+			});
+			
+			while(x < objects.length){
 				var obj = objects[x];
 				console.log(obj);
 				self.addToQueue(obj);
+				x++;		
 			}
 		});
+		console.log("Done adding stored data.");
+		return;
 	},
 	
 	addToQueue: function(obj){
@@ -72,8 +84,9 @@ module.exports = {
 		b64message = new Buffer(message).toString('base64');
 
 		//console.log(message);
+		var options = {'clientRequestTimeoutInMs':1800000};
 
-		queueService.createMessage('pi-walk-items',b64message,function(error){
+		queueService.createMessage('pi-walk-items',b64message,options,function(error){
 			if (!error){
 				console.log("Successfully Added to Queue");
 				addAttempts = 0;
@@ -96,7 +109,7 @@ module.exports = {
 		var id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
 		
 		store.remove(id,function(err){
-			if (err) throw err;
+			if (err) console.log(err);
 		});
 		
 	}
