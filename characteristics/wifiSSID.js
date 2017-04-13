@@ -8,11 +8,12 @@ var BlenoCharacteristic = bleno.Characteristic;
 var wifiSSIDCharacteristic = function() {
 
 	 wifiSSIDCharacteristic.super_.call(this, {
-		uuid: 'ff51b30e-d7e2-4d93-8842-a7c4a57dfb09',
+		uuid: 'ff51b30e-d7e2-4d93-8842-a7c4a57dfb08',
 		properties: ['read','write'],
 		onWriteRequest: function(data,offset,withoutResponse,callback){
 			console.log("onWriteRequest");
 			value = data.toString('utf8');
+			console.log(value);
 			bleData.newSSID = value;
 			console.log(bleData.newSSID);
 			

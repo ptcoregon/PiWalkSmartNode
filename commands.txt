@@ -10,6 +10,9 @@ sudo nano /etc/rc.local
 we need npm version 4.4.4
 we need node version v4.2.4
 
+go to directory for install and run
+sudo npm install /home/pi/PiWalkSmartNode (assuming the files are there)
+
 
 
 

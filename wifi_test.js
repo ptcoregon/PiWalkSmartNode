@@ -42,6 +42,7 @@ module.exports = {
 		}
 
 		events.emitter.on('newCreds', function(){
+			bleData.status = 0x03;
 			led.blink(200);
 			console.log('try new creds');
 			wifi.connect(bleData.newSSID,bleData.password);
@@ -54,10 +55,14 @@ module.exports = {
 			
 				if(connected)
 				{
-					ble.disconnect();
+					
 					console.log("success");
 					bleData.status = 0x01;
-					events.setWifiConnected();
+					setTimeout(function(){
+						ble.disconnect();
+						events.setWifiConnected();
+					},3000);
+					
 				} else {
 					bleData.status = 0x05;
 					console.log("Send failure to phone");

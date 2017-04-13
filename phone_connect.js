@@ -8,6 +8,8 @@ var exports = module.exports = {
 		process.env['BLENO_DEVICE_NAME'] = 'WalkSmart Node';
 		
 		var led = require('./led');
+
+		var bleData = require('./characteristics/wifi_data.js');
 		
 		bleno = require('bleno');
 
@@ -31,8 +33,22 @@ var exports = module.exports = {
 
 		bleno.on('disconnect',function(clientAddress){
 			console.log("Disconnected from " + clientAddress);
-			bleno.startAdvertising('WalkSmart Node', [service.uuid]);
-			led.setOn();
+			if (bleData.status != 0x01)
+			{
+				bleno.startAdvertising('WalkSmart Node', [service.uuid]);
+				led.setOn();
+			} else {
+				bleno.stopAdvertising(function(){
+					console.log("stopped advertising");
+				});
+			}
+		});
+
+		bleno.on('connect',function(clientAddress){
+			console.log("Connected to " + clientAddress);
+			bleno.stopAdvertising(function(){
+				console.log("stopped advertising");
+			});
 		});
 
 		bleno.on('advertisingStart', function(error) {
