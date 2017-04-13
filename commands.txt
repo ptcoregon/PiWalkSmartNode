@@ -7,6 +7,10 @@ sudo npm install forever -g
 sudo nano /etc/rc.local
 
 
+we need npm version 4.4.4
+we need node version v4.2.4
+
+
 
 
 OLD to get Bluetooth File Transfer Working

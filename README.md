@@ -1,2 +1,2 @@
 # PiWalkSmartNode
-Python code for pi zero w node
+Nodejs code for pi zero w node

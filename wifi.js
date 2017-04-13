@@ -1,7 +1,7 @@
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
 
-var promiseRetry = require('promise-retry');
+//var promiseRetry = require('promise-retry');
 
 const WLAN = 'wlan0';
 const MAX_CONNECT_RETRIES = 1;

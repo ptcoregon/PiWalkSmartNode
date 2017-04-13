@@ -1,0 +1,24 @@
+{
+  "name": "walksmart_node",
+  "version": "1.0.0",
+  "description": "nodejs for raspberry pi",
+  "main": "walksmartnode2.js",
+  "dependencies": {
+    "azure-storage": "^2.1.0",
+    "bleno": "^0.4.2",
+    "json-fs-store": "^1.0.1",
+    "noble": "^1.8.0",
+    "rpi-gpio": "^0.7.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/ptcoregon/PiWalkSmartNode"
+  },
+  "author": "Auto-Pilot Medical Technologies, Inc.",
+  "license": "UNLICENSED",
+  "private": "true"
+}
