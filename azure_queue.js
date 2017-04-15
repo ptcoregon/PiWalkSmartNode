@@ -1,7 +1,7 @@
 var azure = require('azure-storage');
 var events = require('./event_module.js');
 
-var store = require('json-fs-store')('/home/pi/PiWalkSmartNode/walk_objects');
+var store = require('json-fs-store')('/walk_objects');
 
 var queueService = null;
 
