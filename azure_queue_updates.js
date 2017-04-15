@@ -68,6 +68,7 @@ module.exports = {
 		{
 			console.log("Update Verion from " + currentVersion + " to " + queueVersion);
 			led.blink(3000);
+			execSync('cd /home/pi');
 			execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
 			execSync('sudo reboot');
 			
