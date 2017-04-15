@@ -6,6 +6,7 @@ var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
 var queue = require('./azure_queue.js');
+var updateQueue = require('./azure_queue_updates.js');
 var events = require('./event_module.js');
 
 var noble = null;
@@ -17,8 +18,9 @@ var currentPeripheral = null;
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
+	updateQueue.initialize();
 	queue.initialize();
-		
+	
 });
 
 
