@@ -49,7 +49,7 @@ module.exports = {
 	getQueueVersion: function() {
 		var self = this;
 		queueService.peekMessage('pi-updates',function(error,result,response){
-			if (results !== undefined){
+			if (result !== undefined){
 				queueVersion = result.messageText;
 				console.log("Queue Version: " + queueVersion);
 				self.compareVersions();
