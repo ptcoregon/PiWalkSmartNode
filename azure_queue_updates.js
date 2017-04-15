@@ -54,6 +54,7 @@ module.exports = {
 			} else {
 				console.log('Peek Queue Message Error: ');
 				console.log(error);
+				events.setQueueError();
 			}
 		});
 	},

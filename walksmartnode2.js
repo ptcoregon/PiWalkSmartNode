@@ -275,6 +275,7 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 
 
-//setInterval(function(){
+setInterval(function(){
 	//console.log("Going");
-//},5000);
+	updateQueue.getPackageVersion();
+},(10*60000));
