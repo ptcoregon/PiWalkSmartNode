@@ -1,6 +1,6 @@
 {
   "name": "walksmart_node",
-  "version": "2",
+  "version": "2.0.0",
   "description": "nodejs for raspberry pi",
   "main": "walksmartnode2.js",
   "dependencies": {
@@ -8,7 +8,8 @@
     "bleno": "^0.4.2",
     "json-fs-store": "^1.0.1",
     "noble": "^1.8.0",
-    "rpi-gpio": "^0.7.0"
+    "rpi-gpio": "^0.7.0",
+    "semver" : "^5.3.0"
   },
   "devDependencies": {},
   "scripts": {},

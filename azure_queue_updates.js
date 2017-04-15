@@ -1,6 +1,7 @@
 var azure = require('azure-storage');
 var events = require('./event_module.js');
 var led = require('./led.js');
+var semver = require('semver');
 
 var execSync = require('child_process').execSync;
 
@@ -40,7 +41,7 @@ module.exports = {
 	},
 
 	getPackageVersion : function() {
-		currentVersion = parseInt(require('./package.json').version);
+		currentVersion = require('./package.json').version;
 		console.log("Current Version: " + currentVersion);
 		this.getQueueVersion();
 	},
@@ -49,7 +50,8 @@ module.exports = {
 		var self = this;
 		queueService.peekMessage('pi-updates',function(error,result,response){
 			if (!error){
-				queueVersion = parseInt(result.messageText);
+				queueVersion = result.messageText;
+				console.log("Queue Version: " + queueVersion);
 				self.compareVersions();
 			} else {
 				console.log('Peek Queue Message Error: ');
@@ -60,7 +62,7 @@ module.exports = {
 	},
 	
 	compareVersions : function(){
-		if (queueVersion > currentVersion)
+		if (semver.gt(queueVersion,currentVersion))
 		{
 			console.log("Update Verion from " + currentVersion + " to " + queueVersion);
 			led.blink(3000);
