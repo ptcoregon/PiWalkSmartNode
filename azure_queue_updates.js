@@ -1,5 +1,6 @@
 var azure = require('azure-storage');
 var events = require('./event_module.js');
+var led = require('./led.js');
 
 var execSync = require('child_process').execSync;
 
@@ -61,8 +62,9 @@ module.exports = {
 		if (queueVersion > currentVersion)
 		{
 			console.log("Update Verion from " + currentVersion + " to " + queueVersion);
-			//execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
-			//execSync('sudo reboot');
+			led.blink(3000);
+			execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
+			execSync('sudo reboot');
 			
 			
 			
