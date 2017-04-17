@@ -233,10 +233,12 @@ function handleData(device,data){
 		var duration = (data[5] << 8) | (data[6] << 0);
 		var rotations = (data[7] << 8) | (data[8] << 0);
 		
+		var best10 = data[9];
+		
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute}
+		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
 		queue.add(obj);
 		
@@ -256,10 +258,12 @@ function handleData(device,data){
 		var duration = (data[15] << 8) | (data[16] << 0);
 		var rotations = (data[17] << 8) | (data[18] << 0);
 		
+		var best10 = data[19];
+		
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute}
+		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
 		queue.add(obj);
 		
