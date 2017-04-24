@@ -237,8 +237,10 @@ function handleData(device,data){
 		
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		
+		var rssi = device.rssi;
+		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
 		queue.add(obj);
 		
@@ -262,8 +264,10 @@ function handleData(device,data){
 		
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		
+		var rssi = device.rssi;
+		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
 		queue.add(obj);
 		
