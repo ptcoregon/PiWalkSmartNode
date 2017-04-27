@@ -5,6 +5,7 @@ sudo npm install forever -g
 
 //HOW TO CALL ON STARTUP
 sudo nano /etc/rc.local
+sudo forever -0 /home/pi/PiWalkSmartNode/out.log -e /home/pi/PiWalkSmartNode/err.log start /home/pi/PiWalkSmartNode/walksmartnode2.js &
 
 
 we need npm version 4.4.4

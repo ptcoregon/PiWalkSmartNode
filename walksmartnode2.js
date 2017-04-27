@@ -9,6 +9,8 @@ var queue = require('./azure_queue.js');
 var updateQueue = require('./azure_queue_updates.js');
 var events = require('./event_module.js');
 
+var moment = require('moment-timezone');
+
 var noble = null;
 
 var connectionTimeout = null;
@@ -81,7 +83,7 @@ function startScan(){
 	noble.on('discover',function(peripheral){
 		var name = peripheral.advertisement.localName
 		//console.log(name);
-		if (name == "WalkSmart2")
+		if (name == "WalkSmart3")
 		{
 			console.log("found walksmart");
 			events.setConnected();
@@ -150,15 +152,75 @@ function discoverServices(peripheral){
 	var data_return_char_uuid = '101';
 	var data_service_uuid = '10';
 	
+	var info_service_uuid = '102';
+	var timezone_char_uuid = '2000';
+	var utc_char_uuid = '2001';
 	
-	var serviceUUIDs = [data_service_uuid];
-	var characteristicUUIDs = [data_char_uuid,data_return_char_uuid];
+	
+	var serviceUUIDs = [data_service_uuid,info_service_uuid];
+	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
 		if (error) console.log(error);
 		//console.log(peripheral.address);
 		//console.log(characteristics);
 		
 		setupDataTransfer(peripheral,characteristics);
+		//getTZ(peripheral,characteristics);
+	});
+	
+}
+
+function getTZ(peripheral,chars) {
+	chars[1].read(function(error,data){
+		if (error){
+			console.log(error);
+			disconnect();
+		} else {
+			var array = [];
+			for (var i = 0; i < 20; i++){
+				var g = data[i];
+				if (g > 0){
+					console.log(g);
+					array.push(g);
+				}
+			}
+			
+			var d = new Buffer(array);
+			
+			var timezone = d.toString();
+			console.log(timezone);
+			var now = moment().valueOf();
+			//console.log(now);
+			var tz = moment.tz.zone(timezone);
+			//console.log(tz);
+			var offset = tz.offset(now);
+			offset = offset/60;
+			//console.log(offset);
+			setUTC(peripheral,chars,offset);
+		}
+	});
+}
+
+function setUTC(peripheral,chars,offset){
+	console.log("offset: " + offset);
+	var m = moment().unix();
+	console.log(m);
+	var array = [
+		(m & 0xff000000) >> 24,
+		(m & 0x00ff0000) >> 16,
+		(m & 0x0000ff00) >> 8,
+		(m & 0x000000ff),
+		offset
+	];
+	var data = new Buffer(array);
+	console.log(data);
+	chars[2].write(data,false,function(err){
+		if (err) {
+			console.log(err);
+			disconnect();
+		} else {
+			console.log("unix written");
+		}
 	});
 	
 }
@@ -175,36 +237,14 @@ function setupDataTransfer(peripheral,chars){
 					disconnect();
 				} 
 
-				
-				//chars[1].write(data,false)
-				
-				
 			});
 			
 	chars[0].once('notify',function(state){
 		console.log("notify: " + state);
 		if (state == true)
 		{
-			chars[1].write(new Buffer([1,1,1,1,1,1,1,1,1,1,1,1,1]),false);
+			getTZ(peripheral,chars);
 		}
-	});
-
-	
-	chars[1].on('write',function(){
-		console.log("written");
-		/*
-		if (lastDataRead[0] == 0x3e)
-		{
-			disconnect();
-		} else {
-			
-			setTimeout(function(){
-				chars[0].read();
-			},50);
-			
-		}
-		* */
-		
 	});
 	
 	chars[0].subscribe(function(error){
