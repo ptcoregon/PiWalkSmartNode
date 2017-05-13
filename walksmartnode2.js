@@ -286,6 +286,20 @@ function handleData(device,data){
 		
 		console.log(obj);
 		
+	} else if (data[0] > 110 && data[0] < 150) { //WE HAVE A CHECKING FROM NO DATA
+		var year = (data[0] - 100)
+		var month = data[1];
+		var day = data[2];
+		var hour = data[3];
+		var minute = data[4];
+		var duration = 0;
+		var rotations = 0;
+		var best10 = 0;
+		var address = device.address.replace(/:/g,"").toUpperCase().trim();
+		var rssi = device.rssi;
+		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		queue.add(obj);
+		console.log(obj);
 	}
 	
 	if (data[10] > 10 && data[10] < 50)
@@ -310,7 +324,7 @@ function handleData(device,data){
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
 		queue.add(obj);
-		
+
 		console.log(obj);
 	}
 	
