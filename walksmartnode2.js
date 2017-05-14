@@ -110,6 +110,10 @@ function connectToWalkSmart(peripheral){
 	peripheral.once('disconnect',function(){
 				console.log("disconnected from walksmart");
 				
+				clearTimeout(connectionTimeout);
+		
+				currentPeripheral = null;
+		
 				var m = execSync('sudo hciconfig hci0 reset');
 				console.log(m.toString('utf8'));
 				led.blink(0);
@@ -127,10 +131,12 @@ function connectToWalkSmart(peripheral){
 		console.log("connected to WalkSmart");
 		
 		
-		
-		//connectionTimeout = setTimeout(function(){
-			//peripheral.disconnect();
-		//},8000);
+		//4 minute connection Timeout
+		connectionTimeout = setTimeout(function(){
+			led.blink(0);
+			currentPeripheral = null;
+			process.exit();
+		},240000);
 		
 		discoverServices(peripheral);
 	});
@@ -341,3 +347,11 @@ setInterval(function(){
 	//console.log("Going");
 	updateQueue.getPackageVersion();
 },(10*60000));
+
+setInterval(function(){
+	var m = moment();
+	if (m.minute() == 10 && currentPeripheral == null){
+		led.blink(0);
+		process.exit();
+	}
+},(60000));
