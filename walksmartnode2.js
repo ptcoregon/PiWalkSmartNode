@@ -150,12 +150,8 @@ function discoverServices(peripheral){
 	
 	console.log("discover services");
 	
-	//var data_char_uuid = '0000010000001000800000805f9b34fb';
-	//var data_return_char_uuid = '0000010100001000800000805f9b34fb';
-	//var data_service_uuid = '0000001000001000800000805f9b34fb';
-	
 	var data_char_uuid = '100';
-	var data_return_char_uuid = '101';
+
 	var data_service_uuid = '10';
 	
 	var info_service_uuid = '102';
@@ -177,6 +173,7 @@ function discoverServices(peripheral){
 }
 
 function getTZ(peripheral,chars) {
+	console.log("getTZ");
 	chars[1].read(function(error,data){
 		if (error){
 			console.log(error);
@@ -220,6 +217,7 @@ function setUTC(peripheral,chars,offset){
 	];
 	var data = new Buffer(array);
 	console.log(data);
+	//console.log(chars[2]);
 	chars[2].write(data,false,function(err){
 		if (err) {
 			console.log(err);

@@ -1,7 +1,9 @@
 var azure = require('azure-storage');
 var events = require('./event_module.js');
 
-var store = require('json-fs-store')('/walk_objects');
+//var store = require('json-fs-store')('/walk_objects');
+var fs = require('fs');
+var folder = '/walk_objects/';
 
 var queueService = null;
 
@@ -39,12 +41,21 @@ module.exports = {
 	add : function(obj){
 		
 		storeObj = obj;
+	
 		
 		storeObj.id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
 		
-		store.add(storeObj,function(err){
-			if (err) throw err;
+		
+		var filename = storeObj.id  + '.json';
+
+		fs.writeFile(folder + filename,JSON.stringify(storeObj),function(error){
+			if (error) {console.log(error)};
 		});
+		
+		
+		//store.add(storeObj,function(err){
+		//	if (err) console.log(err);
+		//});
 		
 		//this.addToQueue(obj);
 
@@ -53,47 +64,90 @@ module.exports = {
 	addStoredData: function(){
 		console.log("Adding stored data:");
 		var self = this;
-		store.list(function(error,store_objects){
-			if (error){
-					console.log(error);
-				}
-			//objects = store_objects;
-			if (store_objects.length > 0)
-			{
-				self.addStoredData2(store_objects,0);
-			}
+		
+		fs.readdir(folder,function(error,files){
+			if (error) {console.log(error)};
+			files.forEach(function(file){
+				console.log(file);
+				fs.readFile(folder + file,'utf-8',function(error,data){
+					if (error) console.log(error);
+					if (data) {
+						console.log(data);
+						try {
+							var obj = JSON.parse(data);
+							console.log("adding to queue: " + obj.rotations);
+							self.addToQueue(obj);
+						} 
+						catch (e) {
+							console.log(e);
+							
+							fs.unlink(folder + file, function(err){
+								console.log(err);
+							});
+						}
+						//self.addStoredData2(data,0);
+						
+						
+					} else {
+						fs.unlink(folder + file, function(err){
+							console.log(err);
+						});
+					}
+					
+				});
+			});
 		});
+		
+		
+		//store.list(function(error,store_objects){
+			//if (error){
+					//console.log("List Error");
+					//console.log(error);
+					
+					//var f = error.match("/walk_objects/(.*).json");
+					
+					//store.remove(f,function(err){
+						//if (err) console.log("Remove Error: " + err);
+					//});
+				//}
+			////objects = store_objects;
+			//if (store_objects && store_objects.length > 0)
+			//{
+				//console.log("Add stored data 2");
+				//self.addStoredData2(store_objects,0);
+			//}
+		//});
 
 
 	},
 	
-	addStoredData2: function(objects,index){
-		var self = this;
-		var con = events.isConnected();
-		//console.log(con);
-		if (con == false)
-		{
-				
-			if (objects.length == 0)
-			{
-				events.setNoMoreStoredWalks(true);
-			} else {
-				var obj = objects[index];
-				console.log("adding to queue: " + obj.rotations);
-				self.addToQueue(obj);
-				
-				if ((index + 1) < objects.length)
-				{
-					setTimeout(function(){
-						self.addStoredData2(objects,index+1);
-					},50);
-				}
-			}
-		}
-		
-		
-		
-	},
+	//~ addStoredData2: function(objects,index){
+		//~ var self = this;
+		//~ var con = events.isConnected();
+		//~ //console.log(con);
+		//~ if (con == false)
+		//~ {
+				//~ 
+			//~ if (objects.length == 0)
+			//~ {
+				//~ events.setNoMoreStoredWalks(true);
+			//~ } else {
+				//~ var obj = objects[index];
+				//~ console.log("adding to queue: " + obj.rotations);
+				//~ self.addToQueue(obj);
+				//~ 
+				//~ if ((index + 1) < objects.length)
+				//~ {
+					//~ setTimeout(function(){
+						//~ self.addStoredData2(objects,index+1);
+					//~ },50);
+				//~ }
+			//~ }
+		//~ }
+		//~ 
+		//~ 
+		//~ 
+	//~ },
 	
 	addToQueue: function(obj){
 		var self = this;
@@ -127,10 +181,16 @@ module.exports = {
 	
 	removeFromStore: function(obj){
 		
-		var id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
+		//var id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
 		
-		store.remove(id,function(err){
-			if (err) console.log(err);
+		//store.remove(id,function(err){
+		//	if (err) console.log(err);
+		//});
+		
+		var file = obj.id + '.json';
+		
+		fs.unlink(folder + file, function(err){
+			console.log(err);
 		});
 		
 	}
