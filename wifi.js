@@ -105,6 +105,18 @@ var wifi = {
 			.then(started => {
 				if(started) {
 					wifi.disconnect();
+					//remove existing networks
+					execSync(commands.wpaCli + ' remove_network 0');
+					execSync(commands.wpaCli + ' remove_network 1');
+					execSync(commands.wpaCli + ' remove_network 2');
+					execSync(commands.wpaCli + ' remove_network 3');
+					execSync(commands.wpaCli + ' remove_network 4');
+					execSync(commands.wpaCli + ' remove_network 5');
+					execSync(commands.wpaCli + ' remove_network 6');
+					execSync(commands.wpaCli + ' remove_network 7');
+					execSync(commands.wpaCli + ' remove_network 8');
+					execSync(commands.wpaCli + ' save_config');
+					
 					// add network via wpa_cli
 					var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
 						console.log(netId);

@@ -16,6 +16,7 @@ module.exports = {
 			if (!error){
 				console.log("Checkin Queue Exists");
 				createAttempts = 0;
+				self.sendCheckin();
 			} else {
 				console.log("Create Checkin Queue Error: ");
 				console.log(error);

@@ -7,6 +7,7 @@ var execSync = require('child_process').execSync;
 
 var queue = require('./azure_queue.js');
 var updateQueue = require('./azure_queue_updates.js');
+var checkinQueue = require('./azure_queue_pi_checkins');
 var events = require('./event_module.js');
 
 var moment = require('moment-timezone');
@@ -21,6 +22,7 @@ var currentPeripheral = null;
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
 	updateQueue.initialize();
+	checkinQueue.initialize();
 	queue.initialize();
 	
 });
@@ -345,6 +347,12 @@ setInterval(function(){
 	//console.log("Going");
 	updateQueue.getPackageVersion();
 },(10*60000));
+
+setInterval(function(){
+	//console.log("Going");
+	checkinQueue.sendCheckin();
+},(30*60000));
+
 
 setInterval(function(){
 	var m = moment();
