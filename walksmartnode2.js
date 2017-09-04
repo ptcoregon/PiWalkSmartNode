@@ -164,11 +164,16 @@ function discoverServices(peripheral){
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
-		if (error) console.log(error);
+		if (error) {
+			console.log('Discover Error:' + error);
+			disconnect();
+		} else {
+			setupDataTransfer(peripheral,characteristics);
+		}
 		//console.log(peripheral.address);
 		//console.log(characteristics);
 		
-		setupDataTransfer(peripheral,characteristics);
+		
 		//getTZ(peripheral,characteristics);
 	});
 	
