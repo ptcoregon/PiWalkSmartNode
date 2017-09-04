@@ -31,7 +31,7 @@ module.exports = {
 	},
 	
 	connectCallback : function(err){
-		//var self = this;
+		var self = this;
 		if (err){
 			console.log("Could not connect: " + err);
 			createAttempts++;
@@ -139,8 +139,6 @@ module.exports = {
 		
 		//obj = {"address": "C449C2FA3DB2", "rssi":-32, "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13, "best10":100}
 		
-		delete obj.id;
-		
 		var m = JSON.stringify(obj);
 		
 		//m = '[' + m + ']';
@@ -174,11 +172,13 @@ module.exports = {
 		//	if (err) console.log(err);
 		//});
 		
-		console.log("remove " + JSON.stringify(obj));
+		var id = obj["id"];
 		
-		var file = obj.id + '.json';
+		//console.log("remove " + JSON.stringify(obj));
 		
-		console.log("remove " + file);
+		var file = id + '.json';
+		
+		console.log("remove file: " + file);
 		
 		fs.unlink(folder + file, function(err){
 			if(err) console.log(err);
