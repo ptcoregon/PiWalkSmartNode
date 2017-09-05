@@ -14,7 +14,7 @@ var moment = require('moment-timezone');
 var fs = require('fs');
 var folder = '/home/pi/walk_objects/';
 
-var authFile = '/home/pi/iot-tokens.json';
+var authFile = '/boot/iot-tokens.json';
 
 var client = null;
 
