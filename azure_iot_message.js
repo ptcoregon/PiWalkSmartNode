@@ -3,6 +3,8 @@ var Message = require('azure-iot-device').Message;
 
 var events = require('./event_module.js');
 
+//var self = require('./azure_iot_message.js');
+
 var fs = require('fs');
 var folder = '/home/pi/walk_objects/';
 
@@ -10,23 +12,16 @@ var client = null;
 
 var createAttempts = 0;
 
-var self = this;
+//var self = this;
 
 module.exports = {
 	
 	initialize : function(){
 		var self = this;
+		console.log("initializing iot messaging");
 		var connectionString = 'HostName=WalkSmart-Node-Hub.azure-devices.net;DeviceId=myFirstNodeDevice;SharedAccessKey=CTSL5mlgnDhj6xB+XBYVIA1lun+85Xp5sFYGo5hcPH8=';
 		client = clientFromConnectionString(connectionString);
 		client.open(self.connectCallback);
-		
-	},
-	
-	printResultFor : function(op){
-		return function printResult(err,res){
-			if (err) console.log(op + ' error' + err.toString());
-			if (res) console.log(op + ' success' + res.constructor.name);
-		};
 		
 	},
 	
@@ -41,7 +36,7 @@ module.exports = {
 				events.setQueueError();
 			} else {
 				console.log("try again");
-				self.initialize();
+				events.setWifiConnected();
 			}
 			
 		} else {
@@ -49,8 +44,12 @@ module.exports = {
 			createAttempts = 0;
 			events.setQueueReady();
 			client.on('message',function(msg){
-				console.log(msg.messageId + " " + msg.data);
-				client.complete(msg,self.printResultFor('completed'));
+				console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
+				console.log(JSON.stringify(msg));
+				client.complete(msg,function(err,res){
+					if (err) console.log('error: ' + err.toString());
+					if (res) console.log('success: ' + res.constructor.name);
+				});
 			});
 			
 			//var data = JSON.stringify([{'hello':'test'}]);

@@ -39,7 +39,7 @@ module.exports = {
 			}, 12000);
 			
 		} else {
-			console.log(typeof emitter);
+			//console.log(typeof emitter);
 			events.setWifiConnected();
 		}
 

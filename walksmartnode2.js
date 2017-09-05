@@ -23,6 +23,7 @@ events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
 	//updateQueue.initialize();
 	//checkinQueue.initialize();
+	console.log("initialize iot messaging");
 	message.initialize();
 	
 });
@@ -39,7 +40,12 @@ events.emitter.on("queueReady",function(){
 	
 	wifi.startChecks();
 	
-	events.emitter.once("queueError",function()
+	
+
+
+});
+
+events.emitter.once("queueError",function()
 	{
 		//if (currentPeripheral)
 		//{
@@ -56,9 +62,6 @@ events.emitter.on("queueReady",function(){
 		},2000);
 		
 	});
-
-
-});
 
 function startScan(){
 	
