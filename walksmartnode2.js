@@ -1,4 +1,3 @@
-
 var wifi = require('./wifi_test.js');
 var led = require('./led.js');
 led.init();
@@ -356,12 +355,13 @@ setInterval(function(){
 	//console.log("Going");
 	updateQueue.getPackageVersion();
 },(10*60000));
+* */
 
 setInterval(function(){
 	//console.log("Going");
-	checkinQueue.sendCheckin();
+	message.sendNodeCheckin();
 },(30*60000));
-*/
+
 
 
 

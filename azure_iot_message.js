@@ -3,10 +3,18 @@ var Message = require('azure-iot-device').Message;
 
 var events = require('./event_module.js');
 
+var update = require('./update.js');
+
+var execSync = require('child_process').execSync;
+var moment = require('moment-timezone');
+
+
 //var self = require('./azure_iot_message.js');
 
 var fs = require('fs');
 var folder = '/home/pi/walk_objects/';
+
+var authFile = '/home/pi/iot-tokens.json';
 
 var client = null;
 
@@ -14,19 +22,44 @@ var createAttempts = 0;
 
 //var self = this;
 
-module.exports = {
+//var DeviceId = 'myFirstNodeDevice';
+//var SharedAccessKey = 'CTSL5mlgnDhj6xB+XBYVIA1lun+85Xp5sFYGo5hcPH8=';
+
+var DeviceId;
+
+var self = module.exports = {
 	
 	initialize : function(){
 		var self = this;
-		console.log("initializing iot messaging");
-		var connectionString = 'HostName=WalkSmart-Node-Hub.azure-devices.net;DeviceId=myFirstNodeDevice;SharedAccessKey=CTSL5mlgnDhj6xB+XBYVIA1lun+85Xp5sFYGo5hcPH8=';
-		client = clientFromConnectionString(connectionString);
-		client.open(self.connectCallback);
+		
+		fs.readFile(authFile,'utf-8',function(err,data){
+			if (err){
+				console.log(err);
+			} else {
+				try {
+					console.log(data);
+					var obj = JSON.parse(data);
+					DeviceId = obj.DeviceId;
+					console.log(DeviceId);
+					
+					console.log("initializing iot messaging");
+					var connectionString = 'HostName=WalkSmart-Node-Hub.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
+					client = clientFromConnectionString(connectionString);
+					client.open(self.connectCallback);
+				} catch (e) {
+					throw e;
+				}
+			}
+			
+		});
+		
+		
+		
 		
 	},
 	
 	connectCallback : function(err){
-		var self = this;
+		//var self = this;
 		if (err){
 			console.log("Could not connect: " + err);
 			createAttempts++;
@@ -41,10 +74,15 @@ module.exports = {
 			
 		} else {
 			console.log("Client Connected");
+			self.sendNodeCheckin();
 			createAttempts = 0;
 			events.setQueueReady();
 			client.on('message',function(msg){
-				console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
+				var newVersion = msg.data;
+				console.log("New Message:" + newVersion);
+				update.compareVersions(newVersion);
+			
+				//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
 				console.log(JSON.stringify(msg));
 				client.complete(msg,function(err,res){
 					if (err) console.log('error: ' + err.toString());
@@ -183,6 +221,36 @@ module.exports = {
 			if(err) console.log(err);
 		});
 		
+	},
+	
+	sendNodeCheckin: function(){
+		
+		var serialBuffer = execSync("cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2");
+		var serial = serialBuffer.toString();
+		serial = serial.replace(/\n/g,'');
+		var now = moment().toISOString();
+		
+		var obj = {"serial":DeviceId,"timestamp":now,"address":0};
+		
+		var m = JSON.stringify(obj);
+		
+		//m = '[' + m + ']';
+		
+		var message = new Message(m);
+		
+		console.log("Sending Node Checkin");
+		
+		client.sendEvent(message,function(error,res){
+			if (!error){
+				console.log("Successfully Sent Node Checkin");
+				return true;
+			} else {
+				console.log('Send Checkin Error: ');
+				console.log(error);
+				events.setQueueError();				
+				
+			}
+		});
 	}
 	
 }
