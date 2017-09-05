@@ -5,11 +5,13 @@ var led = require('./led');
 
 var events = require('./event_module.js');
 
+var reconnectingFlag = false;
+
 module.exports = { 
 	
 	
 	setup : function(){
-		
+		var self = this;
 		var emitter = this.emitter;
 	
 		console.log("start wifi");
@@ -18,8 +20,9 @@ module.exports = {
 		{
 			wifi.disconnect();
 			wifi.reconnect();
+			reconnectingFlag = true;
 			setTimeout(function(){ //wait for reconnect
-				
+				reconnectingFlag = false;
 				var connected = wifi.isConnected();
 				console.log(connected);
 			
@@ -27,8 +30,7 @@ module.exports = {
 				{
 					console.log("didn't reconnect");
 					led.setOn();
-					ble.initialize();
-					
+					ble.initialize();				
 				} else {
 					console.log("reconnected!");
 					events.setWifiConnected();
@@ -42,35 +44,37 @@ module.exports = {
 		}
 
 		events.emitter.on('newCreds', function(){
-			bleData.status = 0x03;
-			led.blink(200);
-			console.log('try new creds');
-			wifi.connect(bleData.newSSID,bleData.password);
+			if (reconnectingFlag == false){
 			
-			
-			setTimeout(function(){ //wait for connection
+				bleData.status = 0x03;
+				led.blink(200);
+				console.log('try new creds');
+				wifi.connect(bleData.newSSID,bleData.password);
+				reconnectingFlag = true;
 				
-				var connected = wifi.isConnected();
-				console.log(connected);
-			
-				if(connected)
-				{
-					
-					console.log("success");
-					bleData.status = 0x01;
-					setTimeout(function(){
-						ble.disconnect();
-						events.setWifiConnected();
-					},3000);
-					
-				} else {
-					bleData.status = 0x05;
-					console.log("Send failure to phone");
-					led.setOn();
-				}
+				setTimeout(function(){ //wait for connection
+					reconnectingFlag = false;
+					var connected = wifi.isConnected();
+					console.log(connected);
 				
-			}, 12000);
-			
+					if(connected)
+					{
+						
+						console.log("success");
+						bleData.status = 0x01;
+						setTimeout(function(){
+							ble.disconnect();
+							events.setWifiConnected();
+						},3000);
+						
+					} else {
+						bleData.status = 0x05;
+						console.log("Send failure to phone");
+						led.setOn();
+					}
+					
+				}, 12000);
+			}
 			
 		});
 
@@ -89,4 +93,5 @@ module.exports = {
 			}
 		},30000);
 	}
+	
 }
