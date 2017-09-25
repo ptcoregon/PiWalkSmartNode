@@ -108,7 +108,7 @@ var self = module.exports = {
 		console.log("add to file");
 		
 		storeObj = obj;
-	
+		storeObj.serial = DeviceId;
 		
 		storeObj.id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
 		
@@ -174,7 +174,8 @@ var self = module.exports = {
 	addToMessage : function(obj){
 		var self = this;
 		
-		//obj = {"address": "C449C2FA3DB2", "rssi":-32, "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13, "best10":100}
+		
+		//obj = {"address": "C449C2FA3DB2", "rssi":-32, "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13, "best10":100,"serial":DeviceId}
 		
 		var m = JSON.stringify(obj);
 		
