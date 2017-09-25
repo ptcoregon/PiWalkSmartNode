@@ -1,11 +1,10 @@
-
 var wifi = require('./wifi_test.js');
 var led = require('./led.js');
 led.init();
 var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
-var queue = require('./azure_queue.js');
+var message = require('./azure_iot_message.js');
 var updateQueue = require('./azure_queue_updates.js');
 var checkinQueue = require('./azure_queue_pi_checkins');
 var events = require('./event_module.js');
@@ -21,9 +20,10 @@ var currentPeripheral = null;
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
-	updateQueue.initialize();
-	checkinQueue.initialize();
-	queue.initialize();
+	//updateQueue.initialize();
+	//checkinQueue.initialize();
+	console.log("initialize iot messaging");
+	message.initialize();
 	
 });
 
@@ -39,7 +39,12 @@ events.emitter.on("queueReady",function(){
 	
 	wifi.startChecks();
 	
-	events.emitter.once("queueError",function()
+	
+
+
+});
+
+events.emitter.once("queueError",function()
 	{
 		//if (currentPeripheral)
 		//{
@@ -56,9 +61,6 @@ events.emitter.on("queueReady",function(){
 		},2000);
 		
 	});
-
-
-});
 
 function startScan(){
 	
@@ -122,7 +124,7 @@ function connectToWalkSmart(peripheral){
 				events.setDisconnected();
 				noble.startScanning([],false,function(error){
 					if (error) console.log(error);
-					queue.addStoredData();
+					message.addStoredData();
 				});
 				
 			});
@@ -164,11 +166,16 @@ function discoverServices(peripheral){
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
-		if (error) console.log(error);
+		if (error) {
+			console.log('Discover Error:' + error);
+			disconnect();
+		} else {
+			setupDataTransfer(peripheral,characteristics);
+		}
 		//console.log(peripheral.address);
 		//console.log(characteristics);
 		
-		setupDataTransfer(peripheral,characteristics);
+		
 		//getTZ(peripheral,characteristics);
 	});
 	
@@ -288,7 +295,7 @@ function handleData(device,data){
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		queue.add(obj);
+		message.add(obj);
 		
 		console.log(obj);
 		
@@ -304,7 +311,7 @@ function handleData(device,data){
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		var rssi = device.rssi;
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
-		queue.add(obj);
+		message.add(obj);
 		console.log(obj);
 	}
 	
@@ -329,7 +336,7 @@ function handleData(device,data){
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		queue.add(obj);
+		message.add(obj);
 
 		console.log(obj);
 	}
@@ -343,15 +350,19 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 
 
+/*
 setInterval(function(){
 	//console.log("Going");
 	updateQueue.getPackageVersion();
 },(10*60000));
+* */
 
 setInterval(function(){
 	//console.log("Going");
-	checkinQueue.sendCheckin();
+	message.sendNodeCheckin();
 },(30*60000));
+
+
 
 
 setInterval(function(){
