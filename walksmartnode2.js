@@ -5,8 +5,6 @@ var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
 var message = require('./azure_iot_message.js');
-var updateQueue = require('./azure_queue_updates.js');
-var checkinQueue = require('./azure_queue_pi_checkins');
 var events = require('./event_module.js');
 
 var moment = require('moment-timezone');
@@ -20,8 +18,6 @@ var currentPeripheral = null;
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
-	//updateQueue.initialize();
-	//checkinQueue.initialize();
 	console.log("initialize iot messaging");
 	message.initialize();
 	

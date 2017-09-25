@@ -6,7 +6,6 @@
   "dependencies": {
     "azure-iot-device": "^1.1.17",
     "azure-iot-device-mqtt": "^1.1.17",
-    "azure-storage": "^2.1.0",
     "bleno": "^0.4.2",
     "moment-timezone": "^0.5.13",
     "noble": "^1.8.0",
