@@ -345,14 +345,6 @@ function handleData(device,data){
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
 
-
-/*
-setInterval(function(){
-	//console.log("Going");
-	updateQueue.getPackageVersion();
-},(10*60000));
-* */
-
 setInterval(function(){
 	//console.log("Going");
 	message.sendNodeCheckin();
