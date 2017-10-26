@@ -74,7 +74,7 @@ function startScan(){
 		if (state == "poweredOn")
 		{
 			led.blink(0);
-			noble.startScanning([],false,function(error){
+			noble.startScanning([],true,function(error){
 				console.log(error);
 			});
 		}
@@ -86,13 +86,42 @@ function startScan(){
 		if (name == "WalkSmart3")
 		{
 			console.log("found walksmart");
-			events.setConnected();
-			noble.once('scanStop',function(){
-				console.log("scan stopped");
-				connectToWalkSmart(peripheral);
-			});
+			try{
+				var data = peripheral.advertisement.serviceData;
+				var first = data[0];
+				var live_data_mode = first.data;
+				
+				var walking = live_data_mode["1"];
+				
+				console.log("Walking: " + walking);
+				
+				if (walking){
+					console.log("Don't Connect!");
+				} else {
+					console.log("connect!");
+					
+					events.setConnected();
+					noble.once('scanStop',function(){
+						console.log("scan stopped");
+						connectToWalkSmart(peripheral);
+					});
+					
+					noble.stopScanning();
+				}	
 			
-			noble.stopScanning();
+			} catch (e){
+				console.log(e);
+				
+				events.setConnected();
+				noble.once('scanStop',function(){
+					console.log("scan stopped");
+					connectToWalkSmart(peripheral);
+				});
+				
+				noble.stopScanning();
+			}
+			
+	
 
 			
 		}
@@ -118,7 +147,7 @@ function connectToWalkSmart(peripheral){
 				console.log(m.toString('utf8'));
 				led.blink(0);
 				events.setDisconnected();
-				noble.startScanning([],false,function(error){
+				noble.startScanning([],true,function(error){
 					if (error) console.log(error);
 					message.addStoredData();
 				});
