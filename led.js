@@ -55,9 +55,9 @@ module.exports = {
 		console.log("init led");
 		gpio.setup(8,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){
 			if(error) console.log(error);
-			//interval = 200;
-			//on();
-			//int = setInterval(on,interval*2);
+			interval = 200;
+			on();
+			int = setInterval(on,interval*2);
 		});
 		
 	}

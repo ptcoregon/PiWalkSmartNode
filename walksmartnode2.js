@@ -9,7 +9,7 @@ var events = require('./event_module.js');
 
 var moment = require('moment-timezone');
 
-var noble = require('noble');
+var noble;
 
 var connectionTimeout = null;
 
@@ -31,18 +31,22 @@ events.emitter.on("wifiConnected", function() //wait until wifi is connected
 
 events.emitter.on("queueReady",function(){
 	
-	//noble = require('noble');
+	noble = require('noble');
 	
-	//var m = execSync('sudo hciconfig hci0 reset');
+	var m = execSync('sudo hciconfig hci0 reset');
 	//console.log(m.toString('utf8'));
+	startScan();
 	
 	
-	
-	//wifi.startChecks();
-	
-	
+	wifi.startChecks();
+});
 
-
+events.emitter.on("startScanAnyway",function(){
+	noble = require('noble');
+	
+	var m = execSync('sudo hciconfig hci0 reset');
+	//console.log(m.toString('utf8'));
+	startScan();
 });
 
 events.emitter.once("queueError",function()
@@ -65,7 +69,7 @@ events.emitter.once("queueError",function()
 
 function startScan(){
 	
-	//var m = execSync('sudo hciconfig hci0 reset');
+	var m = execSync('sudo hciconfig hci0 reset');
 	//console.log(m.toString('utf8'));
 	
 	console.log("Start the WalkSmart Scan");
@@ -110,7 +114,7 @@ function startScan(){
 		//console.log(name);
 		if (name == "WalkSmart3")
 		{
-			console.log("found walksmart");
+			console.log("found walksmart:" + peripheral.address);
 			try{
 				var data = peripheral.advertisement.serviceData;
 				var first = data[0];
@@ -132,10 +136,6 @@ function startScan(){
 					
 					events.setConnected();
 					connectToWalkSmart(peripheral);
-					
-					
-					
-					//noble.stopScanning();
 				}
 			
 			} catch (e){
@@ -171,13 +171,17 @@ function startScan(){
 	
 	noble.on('warning',function(message){
 		console.log("Noble Warning: " + message);
-		disconnect();
+		startScan();
 	});
 	
 }
 
 function disconnect(){
-	currentPeripheral.disconnect();
+	try{
+		currentPeripheral.disconnect();
+	} catch(e){
+		console.log(e);
+	}
 	
 }
 
@@ -215,15 +219,17 @@ function connectToWalkSmart(peripheral){
 		console.log("connected to WalkSmart");
 		
 		
-		//4 minute connection Timeout
-		connectionTimeout = setTimeout(function(){
-			led.blink(0);
-			currentPeripheral = null;
-			process.exit();
-		},240000);
+		
 		
 		discoverServices(peripheral);
 	});
+	
+	//4 minute connection Timeout
+	connectionTimeout = setTimeout(function(){
+		led.blink(0);
+		currentPeripheral = null;
+		process.exit();
+	},240000);
 	
 	peripheral.connect(function(error){
 		if (error){
@@ -429,7 +435,6 @@ function handleData(device,data){
 	return;
 }
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
-startScan();
 
 setInterval(function(){
 	var m = moment();

@@ -1,4 +1,5 @@
 var bleno = null;
+var events = require('./event_module.js');
 
 var exports = module.exports = {
 	
@@ -18,6 +19,14 @@ var exports = module.exports = {
 		var service = new WifiService();
 
 		console.log("start");
+		
+		var advertisingTimeout = setTimeout(function(){
+			bleno.disconnect();
+			bleno.stopAdvertising();
+			led.blink(0);
+			events.startScanAnyway();
+			
+		},120000);
 		
 		bleno.on('stateChange', function(state) {
 		  console.log('on -> stateChange: ' + state);
@@ -46,6 +55,7 @@ var exports = module.exports = {
 
 		bleno.on('connect',function(clientAddress){
 			console.log("Connected to " + clientAddress);
+			clearTimeout(advertisingTimeout);
 			bleno.stopAdvertising(function(){
 				console.log("stopped advertising");
 			});

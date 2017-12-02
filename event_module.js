@@ -46,6 +46,10 @@ module.exports =
 	
 	setNoMoreStoredWalks : function(b){
 		this.noMoreStoredWalks = b;
+	},
+	
+	startScanAnyway: function(){
+		this.emitter.emit("startScanAnyway");
 	}
 	
 
