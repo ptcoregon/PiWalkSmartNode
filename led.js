@@ -10,7 +10,7 @@ var to;
 function on() {
 	
 	gpio.write(8,true,function(err){
-		if(err) throw err;
+		if(err) console.log(err);
 	});
 	
 	to = setTimeout(off,interval);
@@ -20,7 +20,7 @@ function on() {
 function off() {
 	
 	gpio.write(8,false,function(err){
-		if(err) throw err;
+		if(err) console.log(err);
 	});
 
 }
@@ -53,11 +53,11 @@ module.exports = {
 	},
 	init: function(){
 		console.log("init led");
-		gpio.setup(8,gpio.DIR_OUT,function(error){
+		gpio.setup(8,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){
 			if(error) console.log(error);
-			interval = 200;
-			on();
-			int = setInterval(on,interval*2);
+			//interval = 200;
+			//on();
+			//int = setInterval(on,interval*2);
 		});
 		
 	}

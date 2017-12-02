@@ -29,6 +29,8 @@ var DeviceId;
 
 var self = module.exports = {
 	
+	iot_hub_connnected: false,
+	
 	initialize : function(){
 		var self = this;
 		
@@ -63,6 +65,7 @@ var self = module.exports = {
 		if (err){
 			console.log("Could not connect: " + err);
 			createAttempts++;
+			self.iot_hub_connnected = false;
 			if (createAttempts > 1)
 			{
 				console.log("too many attempts");
@@ -74,6 +77,7 @@ var self = module.exports = {
 			
 		} else {
 			console.log("Client Connected");
+			self.iot_hub_connnected = true;
 			self.sendNodeCheckin();
 			createAttempts = 0;
 			events.setQueueReady();
@@ -244,7 +248,7 @@ var self = module.exports = {
 		client.sendEvent(message,function(error,res){
 			if (!error){
 				console.log("Successfully Sent Node Checkin");
-				return true;
+				
 			} else {
 				console.log('Send Checkin Error: ');
 				console.log(error);
