@@ -1,6 +1,8 @@
 var wifi = require('./wifi_test.js');
 var led = require('./led.js');
+var buzzer = require('./buzzer.js');
 led.init();
+buzzer.init();
 var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
@@ -164,7 +166,7 @@ function startScan(){
 			WalkSmartWalkingTimestamp = Date.now();
 			WearWalkingTimestamp = Date.now();
 			firstDiscover = true;
-			led.blink(100);
+			buzzer.buzz(3);
 			setTimeout(function(){led.blink(0)},3000);
 		}
 	});
