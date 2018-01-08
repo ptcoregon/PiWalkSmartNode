@@ -80,14 +80,19 @@ var self = module.exports = {
 			client.on('message',function(msg){
 				var newVersion = msg.data;
 				console.log("New Message:" + newVersion);
-				update.compareVersions(newVersion);
-			
-				//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
-				console.log(JSON.stringify(msg));
-				client.complete(msg,function(err,res){
-					if (err) console.log('error: ' + err.toString());
-					if (res) console.log('success: ' + res.constructor.name);
-				});
+				
+				if (newVersion = "pull"){
+					update.update();	
+				} else {
+					update.compareVersions(newVersion);
+
+					//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
+					console.log(JSON.stringify(msg));
+					client.complete(msg,function(err,res){
+						if (err) console.log('error: ' + err.toString());
+						if (res) console.log('success: ' + res.constructor.name);
+					});
+				}
 			});
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
