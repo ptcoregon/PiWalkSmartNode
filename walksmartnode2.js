@@ -155,17 +155,17 @@ function connectToWalkSmart(peripheral){
 			});
 			
 	peripheral.once('connect',function(){
-		led.blink(1000);
-		currentPeripheral = peripheral;
-		console.log("connected to WalkSmart");
 		
-		
-		//4 minute connection Timeout
+		//1 minute connection Timeout
 		connectionTimeout = setTimeout(function(){
 			led.blink(0);
 			currentPeripheral = null;
 			process.exit();
-		},240000);
+		},60000);
+		
+		led.blink(1000);
+		currentPeripheral = peripheral;
+		console.log("connected to WalkSmart");
 		
 		discoverServices(peripheral);
 	});
@@ -384,7 +384,7 @@ setInterval(function(){
 
 setInterval(function(){
 	var m = moment();
-	if (m.minute() == 10 && currentPeripheral == null){
+	if (m.minute() == 10){
 		led.blink(0);
 		process.exit();
 	}
