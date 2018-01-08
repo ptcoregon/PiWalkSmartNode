@@ -157,11 +157,11 @@ function connectToWalkSmart(peripheral){
 	peripheral.once('connect',function(){
 		
 		//1 minute connection Timeout
-		connectionTimeout = setTimeout(function(){
-			led.blink(0);
-			currentPeripheral = null;
-			process.exit();
-		},60000);
+// 		connectionTimeout = setTimeout(function(){
+// 			led.blink(0);
+// 			currentPeripheral = null;
+// 			process.exit();
+// 		},60000);
 		
 		led.blink(1000);
 		currentPeripheral = peripheral;
@@ -382,10 +382,10 @@ setInterval(function(){
 
 
 
-setInterval(function(){
-	var m = moment();
-	if (m.minute() == 10){
-		led.blink(0);
-		process.exit();
-	}
-},(60000));
+// setInterval(function(){
+// 	var m = moment();
+// 	if (m.minute() == 10){
+// 		led.blink(0);
+// 		process.exit();
+// 	}
+// },(60000));
