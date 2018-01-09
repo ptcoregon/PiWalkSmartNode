@@ -74,7 +74,7 @@ var self = module.exports = {
 			
 		} else {
 			console.log("Client Connected");
-			self.sendNodeCheckin();
+			self.sendNodeCheckin("Connected");
 			createAttempts = 0;
 			events.setQueueReady();
 			client.on('message',function(msg){
