@@ -229,14 +229,18 @@ var self = module.exports = {
 		
 	},
 	
-	sendNodeCheckin: function(){
+	sendNodeCheckin: function(text){
 		
 		var serialBuffer = execSync("cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2");
 		var serial = serialBuffer.toString();
 		serial = serial.replace(/\n/g,'');
 		var now = moment().toISOString();
 		
-		var obj = {"serial":DeviceId,"timestamp":now,"address":0};
+		if (text == NULL || text == undefined){
+			text = "";
+		}
+		
+		var obj = {"serial":DeviceId,"timestamp":now,"address":0,"message":text};
 		
 		var m = JSON.stringify(obj);
 		
