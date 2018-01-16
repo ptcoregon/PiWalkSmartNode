@@ -50,7 +50,7 @@ module.exports = {
 		console.log("init buzz");
 		gpio.setup(33,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){
 			if(error) console.log(error);
-			self.buzz(3);
+			//self.buzz(3);
 		});
 		
 	}
