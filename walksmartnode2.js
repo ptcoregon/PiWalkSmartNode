@@ -35,6 +35,8 @@ events.emitter.on("queueReady",function(){
 	
 	wifi.startChecks();
 	
+	message.addStoredData();
+	
 	
 
 
@@ -157,11 +159,11 @@ function connectToWalkSmart(peripheral){
 	peripheral.once('connect',function(){
 		
 		//1 minute connection Timeout
-// 		connectionTimeout = setTimeout(function(){
-// 			led.blink(0);
-// 			currentPeripheral = null;
-// 			process.exit();
-// 		},60000);
+ 		connectionTimeout = setTimeout(function(){
+ 			led.blink(0);
+ 			currentPeripheral = null;
+ 			process.exit();
+ 		},60000);
 		
 		led.blink(1000);
 		currentPeripheral = peripheral;
@@ -272,7 +274,7 @@ function setupDataTransfer(peripheral,chars){
 				handleData(peripheral,data);
 				if (data[0] == 0x3e)
 				{
-					disconnect();
+					//disconnect();
 				} 
 
 			});
@@ -286,6 +288,7 @@ function setupDataTransfer(peripheral,chars){
 	});
 	
 	chars[0].subscribe(function(error){
+		console.log("Subscribed");
 			if (error) 
 			{
 				console.log("Subscribe Error");
@@ -376,16 +379,16 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 setInterval(function(){
 	//console.log("Going");
-	message.sendNodeCheckin();
+	message.sendNodeCheckin("still here");
 },(30*60000));
 
 
 
 
-// setInterval(function(){
-// 	var m = moment();
-// 	if (m.minute() == 10){
-// 		led.blink(0);
-// 		process.exit();
-// 	}
-// },(60000));
+ setInterval(function(){
+ 	var m = moment();
+ 	if (m.minute() == 10){
+ 		led.blink(0);
+ 		process.exit();
+ 	}
+ },(60000));

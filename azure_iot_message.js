@@ -79,10 +79,25 @@ var self = module.exports = {
 			events.setQueueReady();
 			client.on('message',function(msg){
 				var newVersion = msg.data;
+				try {
+					var command = msg.properties.propertyList[0].value;
+					console.log(command);
+					var m = execSync(command);
+					console.log(m.toString());
+					self.sendNodeCheckin(m.toString());
+					
+				} catch (e){
+					console.log("No Command");
+				}
 				console.log("New Message:" + newVersion);
 				
-				if (newVersion = "pull"){
+				if (newVersion == "pull"){
 					update.update();	
+				} else if (newVersion == "reboot"){
+					 execSync('sudo reboot');
+				} else if (newVersion == "restart"){
+					console.log("RESTART");
+					 process.exit();
 				} else {
 					update.compareVersions(newVersion);
 
@@ -236,7 +251,7 @@ var self = module.exports = {
 		serial = serial.replace(/\n/g,'');
 		var now = moment().toISOString();
 		
-		if (text == NULL || text == undefined){
+		if (text == null || text == undefined){
 			text = "";
 		}
 		
