@@ -1,4 +1,5 @@
 var wifi = require('./wifi_test.js');
+
 var led = require('./led.js');
 led.init();
 var bleData = require('./characteristics/wifi_data.js');
@@ -59,6 +60,7 @@ events.emitter.once("queueError",function()
 		},2000);
 		
 	});
+	
 
 function startScan(){
 	
