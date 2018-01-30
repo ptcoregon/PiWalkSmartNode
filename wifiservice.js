@@ -5,6 +5,7 @@ var wifiStatusCharacteristic = require('./characteristics/wifiStatus');
 var wifiSSIDCharacteristic = require('./characteristics/wifiSSID');
 var wifiPasswordCharacteristic = require('./characteristics/wifiPassword');
 var wifiNetworksCharacteristic = require('./characteristics/wifiNetworks');
+var macCharacteristic = require('./characteristics/mac');
 
 
 
@@ -16,7 +17,9 @@ function WifiService() {
       new wifiStatusCharacteristic(),
       new wifiSSIDCharacteristic(),
       new wifiPasswordCharacteristic(),
-      new wifiNetworksCharacteristic()
+      new macCharacteristic(),
+      new wifiNetworksCharacteristic(),
+      
     ]
   });
 };
