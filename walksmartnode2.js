@@ -16,6 +16,8 @@ var connectionTimeout = null;
 
 var currentPeripheral = null;
 
+var lastImmediateWalkAlertSent = 0;
+
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
@@ -101,6 +103,16 @@ function startScan(){
 				
 				if (walking){
 					console.log("Don't Connect!");
+					var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
+					console.log(diff);
+					if (diff > 120 && message.sendWalkAlarms){
+						var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+						lastImmediateWalkAlertSent = moment();
+						message.sendWalkAlarm(address);
+					} else {
+						console.log("Don't send walk alarm");
+					}
+					
 				} else {
 					console.log("connect!");
 					
@@ -152,7 +164,7 @@ function connectToWalkSmart(peripheral){
 				led.blink(0);
 				events.setDisconnected();
 				noble.startScanning([],true,function(error){
-					if (error) console.log(error);
+					if (error) console.log("Start Scanning Error: " + error);
 					message.addStoredData();
 				});
 				
@@ -175,7 +187,8 @@ function connectToWalkSmart(peripheral){
 	});
 	
 	peripheral.connect(function(error){
-				console.log(error);
+				console.log("Connect Error: " + error);
+				disconnect();
 			});
 }
 
@@ -194,6 +207,7 @@ function discoverServices(peripheral){
 	
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
+	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
 		if (error) {
 			console.log('Discover Error:' + error);
