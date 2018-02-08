@@ -171,7 +171,6 @@ function connectToWalkSmart(peripheral){
 			});
 			
 	peripheral.once('connect',function(){
-		
 		//1 minute connection Timeout
  		connectionTimeout = setTimeout(function(){
  			led.blink(0);
@@ -187,8 +186,13 @@ function connectToWalkSmart(peripheral){
 	});
 	
 	peripheral.connect(function(error){
-				console.log("Connect Error: " + error);
-				disconnect();
+				if (error){
+					console.log("Connect Error: " + error);
+					disconnect();
+				} else {
+					console.log("Connected");
+				}
+				
 			});
 }
 
@@ -208,7 +212,10 @@ function discoverServices(peripheral){
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
 	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
+	
+	
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
+		console.log('discovered');
 		if (error) {
 			console.log('Discover Error:' + error);
 			disconnect();
