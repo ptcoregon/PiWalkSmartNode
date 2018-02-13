@@ -53,7 +53,7 @@ module.exports =
 	
 	startScanAnyway: function(){
 		this.emitter.emit("startScanAnyway");
-	}
+	},
 
 	
 	setSubscribed: function(_updateValueCallback){
