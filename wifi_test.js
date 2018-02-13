@@ -92,6 +92,10 @@ module.exports = {
 				}
 			}
 		},30000);
+	},
+	
+	isConnected(){
+		return wifi.isConnected();
 	}
 	
 }

@@ -1,7 +1,9 @@
 var wifi = require('./wifi_test.js');
 
 var led = require('./led.js');
+var buzzer = require('./buzzer.js');
 led.init();
+buzzer.init();
 var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
@@ -10,11 +12,16 @@ var events = require('./event_module.js');
 
 var moment = require('moment-timezone');
 
-var noble = null;
+var noble;
 
 var connectionTimeout = null;
 
 var currentPeripheral = null;
+
+//parameters for shoe (walksmart wear) monitor
+var WalkSmartWalkingTimestamp = Date.now();
+var WearWalkingTimestamp = Date.now();
+var firstDiscover = true;
 
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
@@ -30,17 +37,20 @@ events.emitter.on("queueReady",function(){
 	noble = require('noble');
 	
 	var m = execSync('sudo hciconfig hci0 reset');
-	console.log(m.toString('utf8'));
-	
+	//console.log(m.toString('utf8'));
 	startScan();
 	
+	
+  message.addStoredData();
 	wifi.startChecks();
-	
-	message.addStoredData();
-	
-	
+});
 
-
+events.emitter.on("startScanAnyway",function(){
+	noble = require('noble');
+	
+	var m = execSync('sudo hciconfig hci0 reset');
+	//console.log(m.toString('utf8'));
+	startScan();
 });
 
 events.emitter.once("queueError",function()
@@ -65,31 +75,51 @@ events.emitter.once("queueError",function()
 function startScan(){
 	
 	var m = execSync('sudo hciconfig hci0 reset');
-	console.log(m.toString('utf8'));
+	//console.log(m.toString('utf8'));
 	
 	console.log("Start the WalkSmart Scan");
 	
 	noble.on('scanStart', function(){
-		console.log("something started a scan");
+		console.log("started a scan");
+		
 	});
 	
 	noble.on('stateChange',function(state){
-		console.log(state);
-		if (state == "poweredOn")
+		console.log("Bluetooth State: " + state);
+		if (state === "poweredOn")
 		{
 			led.blink(0);
 			noble.startScanning([],true,function(error){
-				console.log(error);
+				if (error){
+					console.log(error);
+				}
+			});
+			
+			noble.once('scanStop',function(){
+				console.log("scan stopped");
+				//startScan();	
 			});
 		}
 	});
+	
+	//var m = execSync('sudo hciconfig hci0 reset');
 
 	noble.on('discover',function(peripheral){
+		
+		if ((Date.now() - WearWalkingTimestamp) > 5000){
+			console.log('reset');
+			WalkSmartWalkingTimestamp = Date.now();
+			WearWalkingTimestamp = Date.now();
+			firstDiscover = true;
+		}
+		
+		
+		
 		var name = peripheral.advertisement.localName
 		//console.log(name);
 		if (name == "WalkSmart3")
 		{
-			console.log("found walksmart");
+			console.log("found walksmart:" + peripheral.address);
 			try{
 				var data = peripheral.advertisement.serviceData;
 				var first = data[0];
@@ -101,40 +131,62 @@ function startScan(){
 				
 				if (walking){
 					console.log("Don't Connect!");
-				} else {
+					WalkSmartWalkingTimestamp = Date.now();
+				} else if (wifi.isConnected() && message.iot_hub_connnected && currentPeripheral == null) {
+					currentPeripheral = peripheral;
+					
+					noble.stopScanning();
+					
 					console.log("connect!");
 					
 					events.setConnected();
-					noble.once('scanStop',function(){
-						console.log("scan stopped");
-						connectToWalkSmart(peripheral);
-					});
-					
-					noble.stopScanning();
-				}	
+					connectToWalkSmart(peripheral);
+				}
 			
 			} catch (e){
 				console.log(e);
+				connectToWalkSmart(peripheral);
 				
 				events.setConnected();
-				noble.once('scanStop',function(){
-					console.log("scan stopped");
-					connectToWalkSmart(peripheral);
-				});
 				
-				noble.stopScanning();
+				//noble.stopScanning();
 			}
 			
-	
-
-			
+		} else if (name == "WalkSmartWear"){
+			console.log("WalkSmartWear found");
+			WearWalkingTimestamp = Date.now();
+			if (firstDiscover){
+				WalkSmartWalkingTimestamp = Date.now();
+				firstDiscover = false;
+			}
 		}
+		
+		
+		var difference = WearWalkingTimestamp - WalkSmartWalkingTimestamp;
+		
+		if (difference > 5000){
+			console.log("ALARM!!!!");
+			WalkSmartWalkingTimestamp = Date.now();
+			WearWalkingTimestamp = Date.now();
+			firstDiscover = true;
+			buzzer.buzz(3);
+			setTimeout(function(){led.blink(0)},3000);
+		}
+	});
+	
+	noble.on('warning',function(message){
+		console.log("Noble Warning: " + message);
+		startScan();
 	});
 	
 }
 
 function disconnect(){
-	currentPeripheral.disconnect();
+	try{
+		currentPeripheral.disconnect();
+	} catch(e){
+		console.log(e);
+	}
 	
 }
 
@@ -146,15 +198,23 @@ function connectToWalkSmart(peripheral){
 				clearTimeout(connectionTimeout);
 		
 				currentPeripheral = null;
-		
-				var m = execSync('sudo hciconfig hci0 reset');
-				console.log(m.toString('utf8'));
+
 				led.blink(0);
 				events.setDisconnected();
+				
 				noble.startScanning([],true,function(error){
-					if (error) console.log(error);
-					message.addStoredData();
-				});
+					if (error){
+							console.log(error);
+						}
+					});
+					
+				//noble.once('scanStop',function(){
+				//		console.log("scan stopped");
+				//	});
+					
+				message.addStoredData();
+				
+				
 				
 			});
 			
@@ -174,9 +234,19 @@ function connectToWalkSmart(peripheral){
 		discoverServices(peripheral);
 	});
 	
+	//4 minute connection Timeout
+	connectionTimeout = setTimeout(function(){
+		led.blink(0);
+		currentPeripheral = null;
+		process.exit();
+	},240000);
+	
 	peripheral.connect(function(error){
-				console.log(error);
-			});
+		if (error){
+			console.log(error);
+			startScan();
+		}
+	});
 }
 
 function discoverServices(peripheral){
@@ -375,7 +445,6 @@ function handleData(device,data){
 	
 	return;
 }
-
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
 
@@ -383,9 +452,6 @@ setInterval(function(){
 	//console.log("Going");
 	message.sendNodeCheckin("still here");
 },(30*60000));
-
-
-
 
  setInterval(function(){
  	var m = moment();
