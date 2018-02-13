@@ -48,6 +48,15 @@ module.exports = {
 	init: function(){
 		var self = this;
 		console.log("init buzz");
+		//37 is ground pin
+		gpio.setup(37,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){
+			if(error) console.log(error);
+			gpio.write(37,false,function(err){
+				if(err) console.log(err);
+			});
+		});
+
+		//33 is high pin
 		gpio.setup(33,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){
 			if(error) console.log(error);
 			//self.buzz(3);
