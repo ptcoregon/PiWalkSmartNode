@@ -10,6 +10,8 @@ module.exports =
 	
 	noMoreStoredWalks : false,
 	
+	updateValueCallback : null,
+	
 	setPassword : function(pass){
 		console.log("set password");
 		this.emitter.emit('newCreds');
@@ -47,10 +49,19 @@ module.exports =
 	setNoMoreStoredWalks : function(b){
 		this.noMoreStoredWalks = b;
 	},
+
 	
 	startScanAnyway: function(){
 		this.emitter.emit("startScanAnyway");
 	}
-	
 
+	
+	setSubscribed: function(_updateValueCallback){
+		this.updateValueCallback = _updateValueCallback;
+		this.emitter.emit("subscribed");
+	},
+	
+	setAckReceived: function(){
+		this.emitter.emit("ack");
+	}
 }

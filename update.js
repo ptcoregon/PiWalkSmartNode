@@ -33,6 +33,13 @@ module.exports = {
 			console.log("We have the most recent version");
 		}
 
+	},
+	
+	update : function(){
+		led.blink(3000);
+		execSync('cd /home/pi');
+		execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
+		execSync('sudo reboot');	
 	}
 	
 }

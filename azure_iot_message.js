@@ -78,20 +78,41 @@ var self = module.exports = {
 		} else {
 			console.log("Client Connected");
 			self.iot_hub_connnected = true;
-			self.sendNodeCheckin();
+			self.sendNodeCheckin("Connected");
+
 			createAttempts = 0;
 			events.setQueueReady();
 			client.on('message',function(msg){
 				var newVersion = msg.data;
+				try {
+					var command = msg.properties.propertyList[0].value;
+					console.log(command);
+					var m = execSync(command);
+					console.log(m.toString());
+					self.sendNodeCheckin(m.toString());
+					
+				} catch (e){
+					console.log("No Command");
+				}
 				console.log("New Message:" + newVersion);
-				update.compareVersions(newVersion);
-			
-				//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
-				console.log(JSON.stringify(msg));
-				client.complete(msg,function(err,res){
-					if (err) console.log('error: ' + err.toString());
-					if (res) console.log('success: ' + res.constructor.name);
-				});
+				
+				if (newVersion == "pull"){
+					update.update();	
+				} else if (newVersion == "reboot"){
+					 execSync('sudo reboot');
+				} else if (newVersion == "restart"){
+					console.log("RESTART");
+					 process.exit();
+				} else {
+					update.compareVersions(newVersion);
+
+					//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
+					console.log(JSON.stringify(msg));
+					client.complete(msg,function(err,res){
+						if (err) console.log('error: ' + err.toString());
+						if (res) console.log('success: ' + res.constructor.name);
+					});
+				}
 			});
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
@@ -228,14 +249,18 @@ var self = module.exports = {
 		
 	},
 	
-	sendNodeCheckin: function(){
+	sendNodeCheckin: function(text){
 		
 		var serialBuffer = execSync("cat /proc/cpuinfo | grep Serial | cut -d ' ' -f 2");
 		var serial = serialBuffer.toString();
 		serial = serial.replace(/\n/g,'');
 		var now = moment().toISOString();
 		
-		var obj = {"serial":DeviceId,"timestamp":now,"address":0};
+		if (text == null || text == undefined){
+			text = "";
+		}
+		
+		var obj = {"serial":DeviceId,"timestamp":now,"address":0,"message":text};
 		
 		var m = JSON.stringify(obj);
 		

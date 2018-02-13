@@ -1,4 +1,5 @@
 var wifi = require('./wifi_test.js');
+
 var led = require('./led.js');
 var buzzer = require('./buzzer.js');
 led.init();
@@ -40,6 +41,7 @@ events.emitter.on("queueReady",function(){
 	startScan();
 	
 	
+  message.addStoredData();
 	wifi.startChecks();
 });
 
@@ -68,6 +70,7 @@ events.emitter.once("queueError",function()
 		},2000);
 		
 	});
+	
 
 function startScan(){
 	
@@ -216,12 +219,17 @@ function connectToWalkSmart(peripheral){
 			});
 			
 	peripheral.once('connect',function(){
+		
+		//1 minute connection Timeout
+ 		connectionTimeout = setTimeout(function(){
+ 			led.blink(0);
+ 			currentPeripheral = null;
+ 			process.exit();
+ 		},60000);
+		
 		led.blink(1000);
 		currentPeripheral = peripheral;
 		console.log("connected to WalkSmart");
-		
-		
-		
 		
 		discoverServices(peripheral);
 	});
@@ -338,7 +346,7 @@ function setupDataTransfer(peripheral,chars){
 				handleData(peripheral,data);
 				if (data[0] == 0x3e)
 				{
-					disconnect();
+					//disconnect();
 				} 
 
 			});
@@ -352,6 +360,7 @@ function setupDataTransfer(peripheral,chars){
 	});
 	
 	chars[0].subscribe(function(error){
+		console.log("Subscribed");
 			if (error) 
 			{
 				console.log("Subscribe Error");
@@ -438,16 +447,16 @@ function handleData(device,data){
 }
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
-setInterval(function(){
-	var m = moment();
-	if (m.minute() == 12 && currentPeripheral == null){
-		led.blink(0);
-		process.exit();
-	}
-},(60000));
-
 
 setInterval(function(){
 	//console.log("Going");
-	message.sendNodeCheckin();
+	message.sendNodeCheckin("still here");
 },(30*60000));
+
+ setInterval(function(){
+ 	var m = moment();
+ 	if (m.minute() == 10){
+ 		led.blink(0);
+ 		process.exit();
+ 	}
+ },(60000));

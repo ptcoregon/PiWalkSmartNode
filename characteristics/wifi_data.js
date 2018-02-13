@@ -16,6 +16,6 @@ module.exports = {
 	
 	password : password,
 	
-	status : 0x05
+	status : 0x05,
 	
 }
