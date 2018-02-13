@@ -52,6 +52,7 @@ module.exports =
 
 	
 	startScanAnyway: function(){
+		console.log("Start Scan Anyway");
 		this.emitter.emit("startScanAnyway");
 	},
 

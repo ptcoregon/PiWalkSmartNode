@@ -192,6 +192,7 @@ function startScan(){
 	
 	noble.on('warning',function(message){
 		console.log("Noble Warning: " + message);
+		noble.stopScanning();
 		startScan();
 	});
 	
