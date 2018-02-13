@@ -20,6 +20,8 @@ var client = null;
 
 var createAttempts = 0;
 
+
+
 //var self = this;
 
 //var DeviceId = 'myFirstNodeDevice';
@@ -29,7 +31,11 @@ var DeviceId;
 
 var self = module.exports = {
 	
+
+	sendWalkAlarms : false,
+
 	iot_hub_connnected: false,
+
 	
 	initialize : function(){
 		var self = this;
@@ -82,6 +88,25 @@ var self = module.exports = {
 
 			createAttempts = 0;
 			events.setQueueReady();
+			
+			client.getTwin(function(err,twin){
+				if (err){
+					console.log(err);
+				} else {
+					try{
+						console.log(twin.properties.desired);
+						if (twin.properties.desired.walkAlarm == true){
+							console.log("Turn on immediate walk alarms");
+							self.sendWalkAlarms = true;
+						}
+					} catch(e){
+						console.log("no twin property");
+					}
+				}
+				
+			});
+			
+			
 			client.on('message',function(msg){
 				var newVersion = msg.data;
 				try {
@@ -276,6 +301,24 @@ var self = module.exports = {
 				
 			} else {
 				console.log('Send Checkin Error: ');
+				console.log(error);
+				events.setQueueError();				
+				
+			}
+		});
+	},
+	
+	sendWalkAlarm: function(address){
+		var obj = {"address":address,"walkalarm":"true"};
+		var m = JSON.stringify(obj);
+		var message = new Message(m);
+		console.log("Sending Alarm");
+		client.sendEvent(message,function(error,res){
+			if (!error){
+				console.log("Successfully Sent Alarm");
+				return true;
+			} else {
+				console.log('Send Alarm Error: ');
 				console.log(error);
 				events.setQueueError();				
 				

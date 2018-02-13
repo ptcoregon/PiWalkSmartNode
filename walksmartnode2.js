@@ -18,10 +18,14 @@ var connectionTimeout = null;
 
 var currentPeripheral = null;
 
+
+var lastImmediateWalkAlertSent = 0;
+
 //parameters for shoe (walksmart wear) monitor
 var WalkSmartWalkingTimestamp = Date.now();
 var WearWalkingTimestamp = Date.now();
 var firstDiscover = true;
+
 
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
@@ -131,12 +135,24 @@ function startScan(){
 				
 				if (walking){
 					console.log("Don't Connect!");
-					WalkSmartWalkingTimestamp = Date.now();
+          WalkSmartWalkingTimestamp = Date.now();
+
+					var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
+					console.log(diff);
+					if (diff > 120 && message.sendWalkAlarms){
+						var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+						lastImmediateWalkAlertSent = moment();
+						message.sendWalkAlarm(address);
+					} else {
+						console.log("Don't send walk alarm");
+					}
+					
 				} else if (wifi.isConnected() && message.iot_hub_connnected && currentPeripheral == null) {
 					currentPeripheral = peripheral;
 					
 					noble.stopScanning();
 					
+
 					console.log("connect!");
 					
 					events.setConnected();
@@ -203,23 +219,14 @@ function connectToWalkSmart(peripheral){
 				events.setDisconnected();
 				
 				noble.startScanning([],true,function(error){
-					if (error){
-							console.log(error);
-						}
-					});
-					
-				//noble.once('scanStop',function(){
-				//		console.log("scan stopped");
-				//	});
-					
-				message.addStoredData();
-				
-				
+					if (error) console.log("Start Scanning Error: " + error);
+					message.addStoredData();
+				});
+
 				
 			});
 			
 	peripheral.once('connect',function(){
-		
 		//1 minute connection Timeout
  		connectionTimeout = setTimeout(function(){
  			led.blink(0);
@@ -242,11 +249,15 @@ function connectToWalkSmart(peripheral){
 	},240000);
 	
 	peripheral.connect(function(error){
-		if (error){
-			console.log(error);
-			startScan();
-		}
+				if (error){
+					console.log("Connect Error: " + error);
+					disconnect();
+          startScan();
+				} else {
+					console.log("Connected");
+				}	
 	});
+
 }
 
 function discoverServices(peripheral){
@@ -264,7 +275,11 @@ function discoverServices(peripheral){
 	
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
 	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
+	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
+	
+	
 	peripheral.discoverSomeServicesAndCharacteristics(serviceUUIDs,characteristicUUIDs,function(error,services,characteristics){
+		console.log('discovered');
 		if (error) {
 			console.log('Discover Error:' + error);
 			disconnect();
