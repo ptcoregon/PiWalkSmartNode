@@ -30,7 +30,8 @@ module.exports = {
 				{
 					console.log("didn't reconnect");
 					led.setOn();
-					ble.initialize();				
+					ble.initialize();
+								
 				} else {
 					console.log("reconnected!");
 					events.setWifiConnected();

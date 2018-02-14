@@ -30,6 +30,7 @@ var exports = module.exports = {
 		var advertisingTimeout = setTimeout(function(){
 			bleno.disconnect();
 			bleno.stopAdvertising();
+			bleno = undefined;
 			led.blink(0);
 			events.startScanAnyway();
 			
@@ -50,14 +51,19 @@ var exports = module.exports = {
 		bleno.on('disconnect',function(clientAddress){
 			console.log("Disconnected from " + clientAddress);
 			
-			if (bleData.status != 0x01)
-			{
-				bleno.startAdvertising('WalkSmart Node', [service.uuid]);
-				led.setOn();
-			} else {
-				bleno.stopAdvertising(function(){
-					console.log("stopped advertising");
-				});
+			try{
+				if (bleData.status != 0x01)
+				{
+					bleno.startAdvertising('WalkSmart Node', [service.uuid]);
+					led.setOn();
+				} else {
+					bleno.stopAdvertising(function(){
+						console.log("stopped advertising");
+					});
+				}
+			} catch(e){
+				console.log("start advertising error");
+				console.log(e);
 			}
 		});
 

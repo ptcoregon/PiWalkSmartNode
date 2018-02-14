@@ -33,6 +33,10 @@ var self = module.exports = {
 	
 
 	sendWalkAlarms : false,
+	
+	wearableAlarm : true,
+	wearableAddresses: [],
+	walksmartAddresses: [],
 
 	iot_hub_connnected: false,
 
@@ -53,7 +57,9 @@ var self = module.exports = {
 					console.log("initializing iot messaging");
 					var connectionString = 'HostName=WalkSmart-Node-Hub.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
 					client = clientFromConnectionString(connectionString);
+
 					client.open(self.connectCallback);
+					
 				} catch (e) {
 					throw e;
 				}
@@ -70,6 +76,7 @@ var self = module.exports = {
 		//var self = this;
 		if (err){
 			console.log("Could not connect: " + err);
+			self.getTwin();
 			createAttempts++;
 			self.iot_hub_connnected = false;
 			if (createAttempts > 1)
@@ -89,22 +96,7 @@ var self = module.exports = {
 			createAttempts = 0;
 			events.setQueueReady();
 			
-			client.getTwin(function(err,twin){
-				if (err){
-					console.log(err);
-				} else {
-					try{
-						console.log(twin.properties.desired);
-						if (twin.properties.desired.walkAlarm == true){
-							console.log("Turn on immediate walk alarms");
-							self.sendWalkAlarms = true;
-						}
-					} catch(e){
-						console.log("no twin property");
-					}
-				}
-				
-			});
+			self.getTwin();
 			
 			
 			client.on('message',function(msg){
@@ -151,6 +143,60 @@ var self = module.exports = {
 				
 			//});
 		}
+	},
+	
+	getTwin : function(){
+		client.getTwin(function(err,twin){
+				if (err){
+					console.log(err);
+				} 
+
+				try{
+					if (twin.properties.desired.walkAlarm == true){
+						console.log("Turn on immediate walk alarms");
+						self.sendWalkAlarms = true;
+					}
+				} catch(e){
+					console.log("no walkAlarm property");
+				}
+				
+				try {
+					if (twin.properties.desired.wearableAlarm == true){
+						console.log("Turn on wearable alarm");
+						self.wearableAlarm = true;
+						self.updateWearableAlarmSettings(twin.properties.desired);
+					} else {
+						console.log("Turn off wearable alarm");
+						self.wearableAlarm = false;
+					}
+				} catch(e){
+					console.log(e);
+				}
+			
+		});
+		
+		
+	},
+	
+	updateWearableAlarmSettings : function(desired){
+		var self = this;
+		console.log("updateWearableAlarmSettings");
+		console.log(desired);
+		if (desired.wearableAlarm == false){
+			console.log("Turn off wearable alarm");
+			self.wearableAlarm = false;
+		} else {
+			self.wearableAlarm = true;
+			var a = desired.wearableAddresses;
+			var b = a.replace(/\'/g,'"');
+			console.log(b);
+			self.wearableAddresses = JSON.parse(b);
+			a = desired.walksmartAddresses;
+			var b = a.replace(/\'/g,'"');
+			console.log(b);
+			self.walksmartAddresses = JSON.parse(b);
+		}
+		
 	},
 	
 	add : function(obj){

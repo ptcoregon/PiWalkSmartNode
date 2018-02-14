@@ -111,7 +111,7 @@ function startScan(){
 	noble.on('discover',function(peripheral){
 		
 		if ((Date.now() - WearWalkingTimestamp) > 5000){
-			console.log('reset');
+			//console.log('reset');
 			WalkSmartWalkingTimestamp = Date.now();
 			WearWalkingTimestamp = Date.now();
 			firstDiscover = true;
@@ -135,18 +135,26 @@ function startScan(){
 				
 				if (walking){
 					console.log("Don't Connect!");
-          WalkSmartWalkingTimestamp = Date.now();
-
-					var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
-					console.log(diff);
-					if (diff > 120 && message.sendWalkAlarms){
-						var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
-						lastImmediateWalkAlertSent = moment();
-						message.sendWalkAlarm(address);
-					} else {
-						console.log("Don't send walk alarm");
-					}
 					
+					var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+					
+					var valid_address = message.walksmartAddresses.length == 0 || message.walksmartAddresses.indexOf(address) > -1;
+					
+					if (valid_address){
+						console.log("valid");
+						WalkSmartWalkingTimestamp = Date.now();
+					
+						var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
+						console.log(diff);
+						if (diff > 120 && message.sendWalkAlarms){
+							
+							lastImmediateWalkAlertSent = moment();
+							message.sendWalkAlarm(address);
+						} else {
+							console.log("Don't send walk alarm");
+						}
+					}
+						
 				} else if (wifi.isConnected() && message.iot_hub_connnected && currentPeripheral == null) {
 					currentPeripheral = peripheral;
 					
@@ -169,18 +177,26 @@ function startScan(){
 			}
 			
 		} else if (name == "WalkSmartWear"){
+			var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
 			console.log("WalkSmartWear found");
-			WearWalkingTimestamp = Date.now();
-			if (firstDiscover){
-				WalkSmartWalkingTimestamp = Date.now();
-				firstDiscover = false;
+			
+			if (message.wearableAddresses.length == 0 || message.wearableAddresses.indexOf(address) > -1){
+				console.log("valid");
+				WearWalkingTimestamp = Date.now();
+				if (firstDiscover){
+					WalkSmartWalkingTimestamp = Date.now();
+					firstDiscover = false;
+				}
 			}
+			
+			
+			
 		}
 		
 		
 		var difference = WearWalkingTimestamp - WalkSmartWalkingTimestamp;
 		
-		if (difference > 5000){
+		if (difference > 5000 && message.wearableAlarm){
 			console.log("ALARM!!!!");
 			WalkSmartWalkingTimestamp = Date.now();
 			WearWalkingTimestamp = Date.now();
@@ -466,7 +482,10 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 setInterval(function(){
 	//console.log("Going");
-	message.sendNodeCheckin("still here");
+	if (iot_hub_connnected){
+		message.sendNodeCheckin("still here");
+	}
+	
 },(30*60000));
 
  setInterval(function(){
