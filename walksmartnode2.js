@@ -155,7 +155,7 @@ function startScan(){
 						}
 					}
 						
-				} else if (wifi.isConnected() && message.iot_hub_connnected && currentPeripheral == null) {
+				} else if (wifi.isConnected() && message.iot_hub_connected && currentPeripheral == null) {
 					currentPeripheral = peripheral;
 					
 					noble.stopScanning();
@@ -189,21 +189,28 @@ function startScan(){
 				}
 			}
 			
+			var difference = WearWalkingTimestamp - WalkSmartWalkingTimestamp;
+		
+			if (difference > 5000 && message.wearableAlarm){
+				console.log("ALARM!!!!");
+				WalkSmartWalkingTimestamp = Date.now();
+				WearWalkingTimestamp = Date.now();
+				firstDiscover = true;
+				buzzer.buzz(3);
+				setTimeout(function(){led.blink(0)},3000);
+				//console.log("iot_hub_connected:" + message.iot_hub_connected);
+				if (message.iot_hub_connected){
+					console.log("send to server");
+					message.sendWearableAlarm(address);
+				}
+			}
+			
 			
 			
 		}
 		
 		
-		var difference = WearWalkingTimestamp - WalkSmartWalkingTimestamp;
 		
-		if (difference > 5000 && message.wearableAlarm){
-			console.log("ALARM!!!!");
-			WalkSmartWalkingTimestamp = Date.now();
-			WearWalkingTimestamp = Date.now();
-			firstDiscover = true;
-			buzzer.buzz(3);
-			setTimeout(function(){led.blink(0)},3000);
-		}
 	});
 	
 	noble.on('warning',function(message){
@@ -482,7 +489,7 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 setInterval(function(){
 	//console.log("Going");
-	if (iot_hub_connnected){
+	if (iot_hub_connected){
 		message.sendNodeCheckin("still here");
 	}
 	
@@ -490,7 +497,7 @@ setInterval(function(){
 
  setInterval(function(){
  	var m = moment();
- 	if (m.minute() == 10){
+ 	if (m.minute() == 11){
  		led.blink(0);
  		process.exit();
  	}

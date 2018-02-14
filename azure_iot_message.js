@@ -38,7 +38,7 @@ var self = module.exports = {
 	wearableAddresses: [],
 	walksmartAddresses: [],
 
-	iot_hub_connnected: false,
+	iot_hub_connected: false,
 
 	
 	initialize : function(){
@@ -78,7 +78,7 @@ var self = module.exports = {
 			console.log("Could not connect: " + err);
 			self.getTwin();
 			createAttempts++;
-			self.iot_hub_connnected = false;
+			self.iot_hub_connected = false;
 			if (createAttempts > 1)
 			{
 				console.log("too many attempts");
@@ -90,7 +90,7 @@ var self = module.exports = {
 			
 		} else {
 			console.log("Client Connected");
-			self.iot_hub_connnected = true;
+			self.iot_hub_connected = true;
 			self.sendNodeCheckin("Connected");
 
 			createAttempts = 0;
@@ -361,7 +361,25 @@ var self = module.exports = {
 		console.log("Sending Alarm");
 		client.sendEvent(message,function(error,res){
 			if (!error){
-				console.log("Successfully Sent Alarm");
+				console.log("Successfully Sent Immediate Walk Alarm");
+				return true;
+			} else {
+				console.log('Send Alarm Error: ');
+				console.log(error);
+				events.setQueueError();				
+				
+			}
+		});
+	},
+	
+	sendWearableAlarm: function(address){
+		var obj = {"address":address,"wearablealarm":"true"};
+		var m = JSON.stringify(obj);
+		var message = new Message(m);
+		console.log("Sending Wearable Alarm");
+		client.sendEvent(message,function(error,res){
+			if (!error){
+				console.log("Successfully Sent Wearable Alarm");
 				return true;
 			} else {
 				console.log('Send Alarm Error: ');
