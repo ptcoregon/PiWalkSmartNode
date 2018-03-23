@@ -55,7 +55,7 @@ var self = module.exports = {
 					console.log(DeviceId);
 					
 					console.log("initializing iot messaging");
-					var connectionString = 'HostName=WalkSmart-Node-Hub.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
+					var connectionString = 'HostName=WalkSmart-Node-Hub-2.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
 					client = clientFromConnectionString(connectionString);
 
 					client.open(self.connectCallback);
