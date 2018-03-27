@@ -233,11 +233,11 @@ function disconnect(){
 }
 
 function connectToWalkSmart(peripheral){
-	
+	var self = this;
 	peripheral.once('disconnect',function(){
 				console.log("disconnected from walksmart");
 				
-				clearTimeout(connectionTimeout);
+				clearTimeout(self.connectionTimeout);
 		
 				currentPeripheral = null;
 
@@ -254,7 +254,8 @@ function connectToWalkSmart(peripheral){
 			
 	peripheral.once('connect',function(){
 		//1 minute connection Timeout
- 		connectionTimeout = setTimeout(function(){
+		clearTimeout(self.connectionTimeout);
+ 		self.connectionTimeout = setTimeout(function(){
  			led.blink(0);
  			currentPeripheral = null;
 			console.log("1 minute connection timeout exit");
@@ -269,10 +270,11 @@ function connectToWalkSmart(peripheral){
 	});
 	
 	//4 minute connection Timeout
-	connectionTimeout = setTimeout(function(){
+	clearTimeout(self.connectionTimeout);
+	self.connectionTimeout = setTimeout(function(){
 		led.blink(0);
 		currentPeripheral = null;
-		console.log("4 minute connections timeout exit");
+		console.log("4 minute connection timeout exit");
 		process.exit();
 	},240000);
 	
