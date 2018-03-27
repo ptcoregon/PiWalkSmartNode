@@ -19,12 +19,12 @@ module.exports =
 	
 	setWifiConnected: function(){
 		console.log("set connected");
-		this,emitter.emit("wifiConnected");
+		this.emitter.emit("wifiConnected");
 	},
 	
 	setQueueReady: function(){
 		console.log("queue ready");
-		this,emitter.emit("queueReady");
+		this.emitter.emit("queueReady");
 	},
 	
 	setQueueError: function(){
