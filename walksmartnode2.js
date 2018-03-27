@@ -69,7 +69,9 @@ events.emitter.once("queueError",function()
 			//wifi.setup(); 
 		//},1000);
 		led.setOn();
+		
 		setTimeout(function(){
+			console.log("queueError exit");
 			process.exit();
 		},2000);
 		
@@ -255,6 +257,7 @@ function connectToWalkSmart(peripheral){
  		connectionTimeout = setTimeout(function(){
  			led.blink(0);
  			currentPeripheral = null;
+			console.log("1 minute connection timeout exit");
  			process.exit();
  		},60000);
 		
@@ -269,6 +272,7 @@ function connectToWalkSmart(peripheral){
 	connectionTimeout = setTimeout(function(){
 		led.blink(0);
 		currentPeripheral = null;
+		console.log("4 minute connections timeout exit");
 		process.exit();
 	},240000);
 	
@@ -499,6 +503,7 @@ setInterval(function(){
  	var m = moment();
  	if (m.minute() == 11){
  		led.blink(0);
+		console.log("minute = 11 exit");
  		process.exit();
  	}
  },(60000));
