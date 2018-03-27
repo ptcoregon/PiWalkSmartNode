@@ -495,7 +495,7 @@ wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BL
 
 setInterval(function(){
 	//console.log("Going");
-	if (iot_hub_connected){
+	if (message.iot_hub_connected){
 		message.sendNodeCheckin("still here");
 	}
 	
