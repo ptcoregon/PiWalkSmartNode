@@ -260,8 +260,8 @@ function connectToWalkSmart(peripheral){
  		self.connectionTimeout = setTimeout(function(){
  			led.blink(0);
  			//currentPeripheral = null;
-			console.log("1 minute connection timeout disconnect");
-			self.disconnect();
+			console.log("1 minute connection timeout disconnect 2");
+			disconnect();
  			//process.exit();
  		},60000);
 		
