@@ -224,11 +224,13 @@ function startScan(){
 }
 
 function disconnect(){
+	console.log("disconnecting...");
 	try{
 		currentPeripheral.disconnect();
 	} catch(e){
 		console.log(e);
 	}
+	currentPeripheral = null;
 	
 }
 
@@ -257,7 +259,7 @@ function connectToWalkSmart(peripheral){
 		clearTimeout(self.connectionTimeout);
  		self.connectionTimeout = setTimeout(function(){
  			led.blink(0);
- 			currentPeripheral = null;
+ 			//currentPeripheral = null;
 			console.log("1 minute connection timeout disconnect");
 			self.disconnect();
  			//process.exit();
