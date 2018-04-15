@@ -18,6 +18,16 @@ var connectionTimeout = null;
 
 var currentPeripheral = null;
 
+var batteryLevel = null;
+
+var data_service_uuid = '10';
+var data_char_uuid = '100';
+
+var info_service_uuid = '102';
+var battery_char_uuid = '103';
+var timezone_char_uuid = '2000';
+var utc_char_uuid = '2001';
+
 
 var lastImmediateWalkAlertSent = 0;
 
@@ -225,12 +235,14 @@ function startScan(){
 
 function disconnect(){
 	console.log("disconnecting...");
+	
 	try{
 		currentPeripheral.disconnect();
 	} catch(e){
 		console.log(e);
 	}
 	currentPeripheral = null;
+	this.batteryLevel = 0;
 	
 }
 
@@ -242,6 +254,7 @@ function connectToWalkSmart(peripheral){
 				clearTimeout(self.connectionTimeout);
 		
 				currentPeripheral = null;
+				self.batteryLevel = 0;
 
 				led.blink(0);
 				events.setDisconnected();
@@ -296,18 +309,9 @@ function connectToWalkSmart(peripheral){
 function discoverServices(peripheral){
 	
 	console.log("discover services");
-	
-	var data_char_uuid = '100';
 
-	var data_service_uuid = '10';
-	
-	var info_service_uuid = '102';
-	var timezone_char_uuid = '2000';
-	var utc_char_uuid = '2001';
-	
-	
 	var serviceUUIDs = [data_service_uuid,info_service_uuid];
-	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid];
+	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid];
 	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
 	
 	
@@ -330,7 +334,14 @@ function discoverServices(peripheral){
 
 function getTZ(peripheral,chars) {
 	console.log("getTZ");
-	chars[1].read(function(error,data){
+	var tz_char = null;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == timezone_char_uuid){
+			tz_char = chars[i];
+		}
+	}
+	
+	tz_char.read(function(error,data){
 		if (error){
 			console.log(error);
 			disconnect();
@@ -360,6 +371,40 @@ function getTZ(peripheral,chars) {
 	});
 }
 
+function getBatteryLevel(peripheral,chars){
+	self = this;
+	var battery_char = undefined;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == battery_char_uuid){
+			battery_char = chars[i];
+		}
+	}
+	
+	if (battery_char !== undefined){
+		console.log("getBatteryLevel");
+		battery_char.read(function(error,data){
+			if (error){
+				console.log("Error reading battery level");
+				getTZ(peripheral,chars);
+			} else {
+				console.log(data[0]);
+				console.log(data[1]);
+				var level = (data[0]<<8) | data[1];
+				console.log("Battery Level: " + level);
+				if (level > 150 && level < 350){
+					self.batteryLevel = level;
+				}
+				getTZ(peripheral,chars);
+			}
+		});
+	} else {
+		console.log("no battery char");
+		self.batteryLevel = 0;
+		getTZ(peripheral,chars);
+	}
+	
+}
+
 function setUTC(peripheral,chars,offset){
 	console.log("offset: " + offset);
 	var m = moment().unix();
@@ -374,7 +419,14 @@ function setUTC(peripheral,chars,offset){
 	var data = new Buffer(array);
 	console.log(data);
 	//console.log(chars[2]);
-	chars[2].write(data,false,function(err){
+	var utc_char = undefined;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == utc_char_uuid){
+			utc_char = chars[i];
+		}
+	}
+	
+	utc_char.write(data,false,function(err){
 		if (err) {
 			console.log(err);
 			disconnect();
@@ -389,7 +441,14 @@ function setupDataTransfer(peripheral,chars){
 	
 	var lastDataRead = new Buffer([0,0,0]);
 	
-	chars[0].on('data',function(data,isNotification){
+	var data_char = undefined;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == data_char_uuid){
+			data_char = chars[i];
+		}
+	}
+	
+	data_char.on('data',function(data,isNotification){
 				console.log("Data Event");
 				handleData(peripheral,data);
 				if (data[0] == 0x3e)
@@ -399,15 +458,16 @@ function setupDataTransfer(peripheral,chars){
 
 			});
 			
-	chars[0].once('notify',function(state){
+	data_char.once('notify',function(state){
 		console.log("notify: " + state);
 		if (state == true)
-		{
-			getTZ(peripheral,chars);
+		{	
+			getBatteryLevel(peripheral,chars);
+			//getTZ(peripheral,chars);
 		}
 	});
 	
-	chars[0].subscribe(function(error){
+	data_char.subscribe(function(error){
 		console.log("Subscribed");
 			if (error) 
 			{
@@ -421,7 +481,7 @@ function setupDataTransfer(peripheral,chars){
 
 function handleData(device,data){
 	//device is the name as peripheral
-	
+	var self = this;
 	if (data[0] > 10 && data[0] < 50)
 	{
 	
@@ -458,9 +518,10 @@ function handleData(device,data){
 		var best10 = 0;
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		var rssi = device.rssi;
-		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"batterylevel":self.batteryLevel}
 		message.add(obj);
 		console.log(obj);
+		self.batteryLevel = 0;
 	}
 	
 	if (data[10] > 10 && data[10] < 50)
