@@ -110,6 +110,12 @@ var self = module.exports = {
 			
 			
 			client.on('message',function(msg){
+				client.complete(msg,function(err,res){
+						if (err) console.log('error: ' + err.toString());
+						if (res) console.log('success: ' + res.constructor.name);
+					});
+				
+				
 				var newVersion = msg.data;
 				try {
 					var command = msg.properties.propertyList[0].value;
@@ -136,10 +142,7 @@ var self = module.exports = {
 
 					//console.log("" + msg.data + " update: " + msg.properties.propertyList[0].value);
 					console.log(JSON.stringify(msg));
-					client.complete(msg,function(err,res){
-						if (err) console.log('error: ' + err.toString());
-						if (res) console.log('success: ' + res.constructor.name);
-					});
+					
 				}
 			});
 			
