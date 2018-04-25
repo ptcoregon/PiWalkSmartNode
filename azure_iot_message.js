@@ -73,13 +73,37 @@ var self = module.exports = {
 	},
 	
 	pull : function(request,response){
-		console.log("pull");
+		console.log("pull function");
 		//console.log(request);
 		response.send(200,"starting pull from github",function(err){
 			console.log(err);
 		});
 		update.update();
 		
+	},
+	
+	command : function(request,response){
+		console.log("request functions");
+		var command = request.payload.command;
+		console.log(command);
+		var s = "could not complete command";
+		try {
+			var m = execSync(command);
+			s = m.toString();
+			console.log(s);
+		} catch(e){
+			console.log(e);
+		}
+		
+		response.send(200,s,function(err){
+			console.log(err);
+		});
+	},
+	
+	restart: function(request,response){
+		console.log("restart script function");
+		process.exit();
+		response.send(200,"Did Not Exit");
 	},
 	
 	connectCallback : function(err){
@@ -147,6 +171,8 @@ var self = module.exports = {
 			});
 			
 			client.onDeviceMethod('pull',self.pull);
+			client.onDeviceMethod('command',self.command);
+			client.onDeviceMethod('restart',self.restart);
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
 			//var message = new Message(data);
