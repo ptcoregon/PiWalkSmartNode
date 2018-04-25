@@ -67,7 +67,7 @@ var exports = module.exports = {
 			}
 		});
 
-		bleno.on('connect',function(clientAddress){
+		bleno.on('accept',function(clientAddress){
 			console.log("Connected to " + clientAddress);
 
 			clearTimeout(advertisingTimeout);
