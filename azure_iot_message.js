@@ -72,6 +72,16 @@ var self = module.exports = {
 		
 	},
 	
+	pull : function(request,response){
+		console.log("pull");
+		//console.log(request);
+		response.send(200,"starting pull from github",function(err){
+			console.log(err);
+		});
+		update.update();
+		
+	},
+	
 	connectCallback : function(err){
 		//var self = this;
 		if (err){
@@ -114,7 +124,8 @@ var self = module.exports = {
 				console.log("New Message:" + newVersion);
 				
 				if (newVersion == "pull"){
-					update.update();	
+					console.log("pull message");
+					//update.update();	
 				} else if (newVersion == "reboot"){
 					 execSync('sudo reboot');
 				} else if (newVersion == "restart"){
@@ -131,6 +142,8 @@ var self = module.exports = {
 					});
 				}
 			});
+			
+			client.onDeviceMethod('pull',self.pull);
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
 			//var message = new Message(data);
