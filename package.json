@@ -1,11 +1,11 @@
 {
   "name": "walksmart_node",
-  "version": "2.5.2",
+  "version": "2.6.0",
   "description": "nodejs for raspberry pi",
   "main": "walksmartnode2.js",
   "dependencies": {
-    "azure-iot-device": "^1.1.17",
-    "azure-iot-device-mqtt": "^1.1.17",
+    "azure-iot-device": "^1.4.1",
+    "azure-iot-device-mqtt": "^1.4.1",
     "bleno": "^0.4.2",
     "moment-timezone": "^0.5.13",
     "noble": "^1.8.0",
