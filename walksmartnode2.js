@@ -9,6 +9,7 @@ var execSync = require('child_process').execSync;
 
 var message = require('./azure_iot_message.js');
 var events = require('./event_module.js');
+var clock = require('./clock.js');
 
 var moment = require('moment-timezone');
 
@@ -47,6 +48,8 @@ events.emitter.on("wifiConnected", function() //wait until wifi is connected
 
 
 events.emitter.on("queueReady",function(){
+	
+	clock.update();
 	
 	noble = require('noble');
 	
