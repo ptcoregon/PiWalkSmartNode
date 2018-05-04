@@ -1,6 +1,7 @@
 var http = require("http");
 var moment = require("moment");
 var execSync = require('child_process').execSync;
+var events = require('./event_module.js');
 
 var self = module.exports = {
 	
@@ -22,11 +23,12 @@ var self = module.exports = {
 				//console.log(command_string);
 				var response = execSync(command_string);
 				//console.log(response);
+				events.setClockUpdated();
 				
 			} else {
 				
 				console.log("System clock is correct");
-				
+				events.setClockUpdated();
 			}
 			
 			

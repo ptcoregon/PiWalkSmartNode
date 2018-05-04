@@ -22,6 +22,10 @@ module.exports =
 		this.emitter.emit("wifiConnected");
 	},
 	
+	setClockUpdated: function(){
+		this.emitter.emit("clockUpdated");
+	},
+	
 	setQueueReady: function(){
 		console.log("queue ready");
 		this.emitter.emit("queueReady");

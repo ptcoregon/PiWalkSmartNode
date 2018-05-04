@@ -41,6 +41,12 @@ var firstDiscover = true;
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
+	clock.update();
+	
+});
+
+events.emitter.on("clockUpdated", function() //wait until clock is updated or confirmed
+{
 	console.log("initialize iot messaging");
 	message.initialize();
 	
@@ -49,7 +55,7 @@ events.emitter.on("wifiConnected", function() //wait until wifi is connected
 
 events.emitter.on("queueReady",function(){
 	
-	clock.update();
+	
 	
 	noble = require('noble');
 	
