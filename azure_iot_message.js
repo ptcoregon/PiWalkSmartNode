@@ -102,6 +102,11 @@ var self = module.exports = {
 		});
 	},
 	
+	version : function(request,response){
+		var currentVersion = require('./package.json').version;	
+		response.send(200,currentVersion,function(err){console.log(err);});
+	},
+	
 	restart: function(request,response){
 		console.log("restart script function");
 		process.exit();
@@ -175,6 +180,7 @@ var self = module.exports = {
 			client.onDeviceMethod('pull',self.pull);
 			client.onDeviceMethod('command',self.command);
 			client.onDeviceMethod('restart',self.restart);
+			client.onDeviceMethod('version',self.version);
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
 			//var message = new Message(data);
