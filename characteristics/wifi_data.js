@@ -1,5 +1,5 @@
 
-var currentSSID = 'currentSSID!';
+var currentSSID = "currentSSID!";
 
 var newSSID = "newSSID!";
 

@@ -50,6 +50,9 @@ module.exports = {
 				bleData.status = 0x03;
 				led.blink(200);
 				console.log('try new creds');
+				console.log(bleData.newSSID);
+				console.log(bleData.password);
+				
 				wifi.connect(bleData.newSSID,bleData.password);
 				reconnectingFlag = true;
 				

@@ -1,5 +1,6 @@
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
+var fs = require('fs');
 
 //var promiseRetry = require('promise-retry');
 
@@ -117,6 +118,7 @@ var wifi = {
 					execSync(commands.wpaCli + ' remove_network 8');
 					execSync(commands.wpaCli + ' save_config');
 					
+					/*
 					// add network via wpa_cli
 					var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
 						console.log(netId);
@@ -136,6 +138,87 @@ var wifi = {
 					execSync(commands.wpaCli + ' enable_network ' + netId);
 					wifi.reconnect();
 					execSync(commands.wpaCli + ' save_config');
+					console.log("Done");
+					* */
+					
+					// add network via wpa_cli
+					var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
+					console.log(netId);
+					// set the SSID
+					try {
+						var status = execSync(commands.wpaCli + ' set_network ' + netId + ' ssid \'"' + ssid + '"\'');
+						//console.log(commands.wpaCli + ' set_network ' + netId + ' ssid \'"' + ssid + '"\'');
+						var status_string = status.toString();
+						//console.log(status_string);
+					} catch (e) {
+						//console.log(e);
+						console.log("SET SSID IS WPA_SUPPLICANT");
+						execSync(commands.wpaCli + ' set_network ' + netId + ' ssid \'"ssid placeholder"\'');
+						execSync(commands.wpaCli + ' set_network ' + netId + ' psk \'"psk placeholder"\'');
+						execSync(commands.wpaCli + ' save_config');
+						
+						var wpa_text_buffer = execSync("sudo head -n 10 /etc/wpa_supplicant/wpa_supplicant.conf");
+
+						var wpa_text = wpa_text_buffer.toString();
+
+						//console.log(wpa_text);
+
+						var ssid_loc = wpa_text.indexOf("ssid placeholder");
+
+						var first = wpa_text.substring(0,ssid_loc);
+						var second = wpa_text.substring(ssid_loc + 16);
+
+						var new_text = first + ssid + second;
+
+						console.log(new_text);
+
+						fs.writeFileSync("/etc/wpa_supplicant/wpa_supplicant.conf",new_text)
+						
+						console.log("wrote to file"); 
+						execSync(commands.wpaCli + ' reconfigure');
+					}
+						
+					// set passphrase if required, other set key management to none
+					if(psk) {
+						
+						try {
+							execSync(commands.wpaCli + ' set_network ' + netId + ' psk \'"' + psk + '"\'');
+						} catch(e){
+							console.log("SET PSK IN WPA_SUPPLICANT");
+							execSync(commands.wpaCli + ' set_network ' + netId + ' psk \'"psk placeholder"\'');
+							execSync(commands.wpaCli + ' save_config');
+							
+							var wpa_text_buffer = execSync("sudo head -n 10 /etc/wpa_supplicant/wpa_supplicant.conf");
+
+							var wpa_text = wpa_text_buffer.toString();
+
+							//console.log(wpa_text);
+
+							var ssid_loc = wpa_text.indexOf("psk placeholder");
+
+							var first = wpa_text.substring(0,ssid_loc);
+							var second = wpa_text.substring(ssid_loc + 15);
+
+							var new_text = first + psk + second;
+
+							console.log(new_text);
+
+							fs.writeFileSync("/etc/wpa_supplicant/wpa_supplicant.conf",new_text)
+							
+							console.log("wrote to file"); 
+							execSync(commands.wpaCli + ' reconfigure');
+						}
+						
+					} else {
+						execSync(commands.wpaCli + ' set_network ' + netId + ' key_mgmt NONE');
+					}
+						
+					// enable directed probe scan in case this is a hidden network
+					execSync(commands.wpaCli + ' set_network ' + netId + ' scan_ssid 1');
+					execSync(commands.wpaCli + ' enable_network ' + netId);
+					execSync(commands.wpaCli + ' save_config');
+					execSync(commands.wpaCli + ' reconnect');
+					
 					console.log("Done");
 					
 					resolve(true);
