@@ -422,6 +422,24 @@ var self = module.exports = {
 		});
 	},
 	
+	sendTippedAlarm: function(address){
+		var obj = {"address":address,"tipped":"true"};
+		var m = JSON.stringify(obj);
+		var message = new Message(m);
+		console.log("Sending Tipped Alarm");
+		client.sendEvent(message,function(error,res){
+			if (!error){
+				console.log("Successfully Sent Tipped Alarm");
+				return true;
+			} else {
+				console.log('Send Alarm Error: ');
+				console.log(error);
+				events.setQueueError();				
+				
+			}
+		});
+	},
+	
 	sendWearableAlarm: function(address){
 		var obj = {"address":address,"wearablealarm":"true"};
 		var m = JSON.stringify(obj);

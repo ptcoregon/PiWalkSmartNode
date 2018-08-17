@@ -142,7 +142,7 @@ function startScan(){
 		
 		var name = peripheral.advertisement.localName
 		//console.log(name);
-		if (name == "WalkSmart3")
+		if (name == "WalkSmart3" || name == "WalkWise")
 		{
 			console.log("found walksmart:" + peripheral.address);
 			try{
@@ -152,14 +152,27 @@ function startScan(){
 				
 				var walking = live_data_mode["1"];
 				
-				console.log("Walking: " + walking);
+				var tipped = live_data_mode["3"];
 				
-				if (walking){
+				console.log("Walking: " + walking);
+				console.log("Tipped: " + tipped);
+				
+				var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();		
+				var valid_address = message.walksmartAddresses.length == 0 || message.walksmartAddresses.indexOf(address) > -1;
+				
+				if (tipped){
+					message.sendTippedAlarm(address);
+					currentPeripheral = peripheral;
+					
+					noble.stopScanning();
+					
+
+					console.log("connect!");
+					
+					events.setConnected();
+					connectToWalkSmart(peripheral);
+				} else if (walking){
 					console.log("Don't Connect!");
-					
-					var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
-					
-					var valid_address = message.walksmartAddresses.length == 0 || message.walksmartAddresses.indexOf(address) > -1;
 					
 					if (valid_address){
 						console.log("valid");
@@ -174,6 +187,8 @@ function startScan(){
 						} else {
 							console.log("Don't send walk alarm");
 						}
+						
+						
 					}
 						
 				} else if (wifi.isConnected() && message.iot_hub_connected && currentPeripheral == null) {
