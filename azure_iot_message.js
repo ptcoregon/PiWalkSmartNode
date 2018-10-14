@@ -18,6 +18,8 @@ var folder = '/home/pi/walk_objects/';
 
 var authFile = '/boot/iot-tokens.json';
 
+
+
 var client = null;
 
 var createAttempts = 0;
@@ -25,9 +27,6 @@ var createAttempts = 0;
 
 
 //var self = this;
-
-//var DeviceId = 'myFirstNodeDevice';
-//var SharedAccessKey = 'CTSL5mlgnDhj6xB+XBYVIA1lun+85Xp5sFYGo5hcPH8=';
 
 var DeviceId;
 
@@ -39,6 +38,13 @@ var self = module.exports = {
 	wearableAlarm : true,
 	wearableAddresses: [],
 	walksmartAddresses: [],
+	
+	bedReturnAlarm : true,
+	bedReturnUUID : 'CF7915475177',
+	bedReturnThreshold: 15,
+	bedReturnTimezone: 'US/Central',
+	bedReturnStartHour: 12,
+	bedReturnEndHour: 12,
 
 	iot_hub_connected: false,
 
@@ -59,8 +65,8 @@ var self = module.exports = {
 					console.log("initializing iot messaging");
 					var connectionString = 'HostName=WalkSmart-Node-Hub-2.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
 					client = azure_iot_device.Client.fromConnectionString(connectionString,mqttws);
-
 					client.open(self.connectCallback);
+					
 					
 				} catch (e) {
 					throw e;
@@ -68,9 +74,6 @@ var self = module.exports = {
 			}
 			
 		});
-		
-		
-		
 		
 	},
 	
@@ -196,10 +199,13 @@ var self = module.exports = {
 	},
 	
 	getTwin : function(){
+		console.log("get twin");
 		client.getTwin(function(err,twin){
 				if (err){
 					console.log(err);
-				} 
+				} else {
+					console.log(JSON.stringify(twin.properties.desired));
+				}
 
 				try{
 					if (twin.properties.desired.walkAlarm == true){
@@ -218,6 +224,27 @@ var self = module.exports = {
 					} else {
 						console.log("Turn off wearable alarm");
 						self.wearableAlarm = false;
+					}
+				} catch(e){
+					console.log(e);
+				}
+				
+				try {
+					if (twin.properties.desired.bedReturnAlarm == true){
+						console.log("Turn on bed return alarm");
+						self.bedReturnAlarm = true;
+						var a = twin.properties.desired.bedReturnAddress;
+						var b = a.replace(/\'/g,'"');
+						self.bedReturnUUID = b;
+						console.log("bed return UUID: " + self.bedReturnUUID);
+						self.bedReturnThreshold= parseInt(twin.properties.desired.bedReturnThreshold);
+						self.bedReturnTimezone = twin.properties.desired.bedReturnTimezone;
+						self.bedReturnStartHour = parseInt(twin.properties.desired.bedReturnStartHour);
+						self.bedReturnEndHour = parseInt(twin.properties.desired.bedReturnEndHour);
+						
+					} else {
+						console.log("Turn off bed return alarm");
+						self.bedReturnAlarm  = false;
 					}
 				} catch(e){
 					console.log(e);
@@ -456,7 +483,25 @@ var self = module.exports = {
 				
 			}
 		});
-	}
+	},
+	
+	sendBedReturnAlarm: function(address){
+		var obj = {"address":address,"noBedReturn":"true","bedReturnThreshold":self.bedReturnThreshold};
+		var m = JSON.stringify(obj);
+		var message = new Message(m);
+		console.log("Sending Bed Return Alarm");
+		client.sendEvent(message,function(error,res){
+			if (!error){
+				console.log("Successfully Sent Bed Return Alarm");
+				return true;
+			} else {
+				console.log('Send Alarm Error: ');
+				console.log(error);
+				events.setQueueError();				
+				
+			}
+		});
+	},
 	
 }
 

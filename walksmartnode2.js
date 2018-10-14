@@ -36,29 +36,27 @@ var lastImmediateWalkAlertSent = 0;
 
 var fs = require('fs');
 var folder = '/home/pi/walk_objects/';
-//const storage = require('node-persist');
-//await storage.init({dir:'persist',stringify:JSON.stringify,parse:JSON.parse,ecoding:'utf8',ttl:false,expiredInterval:2*60*1000,forgiveParseErrors:false});
 
 var bedReturnAlertThreshold = 15;
 var lightOn = false;
 var lastButtonPushMoment = moment(0);
-//lastButtonPushMoment = moment(lastButtonPushMoment).tz(timezone);
-//console.log('lastButtonPushMoment ' + lastButtonPushMoment);
 var lastWalkMoment = moment(0);
-//lastWalkMoment = moment(lastWalkMoment).tz(timezone);
-//console.log('lastWalkMoment ' + lastWalkMoment);
+
 var bedReturnTimeout = null;
 var bedReturnTimeoutMinutes = null;
 var interval = null;
-const timezone = 'US/Central';
-var bedReturnUUID = 'CF7915475177';
+
+//bedReturnAlarm : true,
+//bedReturnUUID : '',
+//bedReturnThreshold: 15,
+//bedReturnTimezone: 'US/Central',
+//bedReturnStartHour: 12,
+//bedReturnEndHour: 12,
 
 //parameters for shoe (walksmart wear) monitor
 var WalkSmartWalkingTimestamp = Date.now();
 var WearWalkingTimestamp = Date.now();
 var firstDiscover = true;
-
-
 
 
 
@@ -76,10 +74,12 @@ const button = new Gpio(3,{
 button.on('interrupt',(level)=> {
 	console.log("button pressed");
 	clearInterval(interval);
-	button_led.pwmWrite(0);
+	button_led.digitalWrite(0);
 	lightOn = false;
-	lastButtonPushMoment = moment().tz(timezone);
-	lastWalkMoment = moment(0).tz(timezone);
+	clearTimeout(bedReturnTimeout);
+	lastButtonPushMoment = moment().tz(message.bedReturnTimezone);
+	lastWalkMoment = moment(0).tz(message.bedReturnTimezone);
+	bedReturnTimeoutMinutes = null;
 	console.log(lastButtonPushMoment.format());
 	storeBedReturnMoments();
 	//await storage.setItem('lastButtonPushMoment',lastButtonPushMoment.format());
@@ -111,72 +111,32 @@ function turnOnLight(){
 	
 }
 
-function checkBedReturn(){
-	
-	console.log("checkBedReturn");
-	console.log(lastWalkMoment.format());
-	console.log(lastButtonPushMoment.format());
-	
-	var diff = lastWalkMoment.diff(lastButtonPushMoment,'minutes');
-	
-	var hour = lastWalkMoment.hour();
-	console.log("lastWalkMoment hour: " + hour);
-	var now_moment = moment().tz(timezone);
-	var now_hour = now_moment.hour();
-	var now_push_diff = now_moment.diff(lastButtonPushMoment,'minutes');
-	var now_walk_diff = now_moment.diff(lastWalkMoment,'minutes'); //should be taken care of when lastWalkMoment is set, too, ignore yesterday lastWalkMoment
-	
-	console.log("now_push_diff : " + now_push_diff);
-	console.log("now_walk_diff : " + now_walk_diff);
-	
-	var isWithinHourRange = (now_hour > 18 || now_hour < 12) && (hour > 18 || hour < 12);
-	
-	if (isWithinHourRange && now_walk_diff > bedReturnAlertThreshold && now_walk_diff < 8*60 && lightOn){
-		lightOn = false;
-		clearInterval(interval);
-		button_led.pwmWrite(0);
-		message.sendTippedAlarm(bedReturnUUID);
-	} else {
-		console.log("don't send alert");
-	}
-	
-	if (isWithinHourRange && diff > 0 && now_walk_diff < 6){
-		console.log("inside if");
-			if (!lightOn){
-				turnOnLight();
-				lightOn = true;
-			}
-	} else {
-		console.log("don't turn on light");
-	}
-}
-
 function checkWalkMoment(walkMoment){
 	console.log("walkMoment: " + walkMoment.format());
 	console.log("lastWalkMoment: " + lastWalkMoment.format());
-	var futureMoment = moment().tz(timezone).add(3,'minutes');
+	var futureMoment = moment().tz(message.bedReturnTimezone).add(3,'minutes');
 	//make sure we're not getting a date in the future
 	console.log("futureMoment: " + futureMoment.format());
 	
-	var pastMoment = moment().tz(timezone).subtract(6,'minutes');
+	var pastMoment = moment().tz(message.bedReturnTimezone).subtract(6,'minutes');
 	//make sure we're not getting a date in the past too far back (avoid light turning on in bed due to connection issues)
 	console.log("pastMoment: " + pastMoment.format());
 	
 	if (walkMoment.isAfter(lastWalkMoment) && walkMoment.isBefore(futureMoment) && walkMoment.isAfter(pastMoment)){
 		
-		lastWalkMoment = moment(walkMoment).tz(timezone);
+		lastWalkMoment = moment(walkMoment).tz(message.bedReturnTimezone);
 		console.log("WE HAVE A NEW LATEST WALK! " + lastWalkMoment.format());
 		hour = lastWalkMoment.hour();
 		storeBedReturnMoments();
 		//checkBedReturn();
-		var now_moment = moment().tz(timezone);
+		var now_moment = moment().tz(message.bedReturnTimezone);
 		var now_hour = now_moment.hour();
-		var isWithinHourRange = (now_hour > 18 || now_hour < 19) && (hour > 18 || hour < 19);
+		var isWithinHourRange = (now_hour >= message.bedReturnStartHour || now_hour < message.bedReturnEndHour) && (hour >= message.bedReturnStartHour || hour < message.bedReturnEndHour);
 		var diff = lastWalkMoment.diff(lastButtonPushMoment,'minutes');
 		console.log("diff: " + diff);
 		
 		if (isWithinHourRange && diff > 1){
-			bedReturnTimeoutMinutes = 5
+			bedReturnTimeoutMinutes = message.bedReturnThreshold;
 			setBedReturnTimeout();
 		}
 		
@@ -186,7 +146,7 @@ function checkWalkMoment(walkMoment){
 function setBedReturnTimeout(){
 	if (!bedReturnTimeoutMinutes){
 		//bedReturnTimeoutMinutes = bedReturnAlertThreshold;
-		bedReturnTimeoutMinutes = 5;
+		bedReturnTimeoutMinutes = message.bedReturnThreshold;
 	}
 	
 	console.log("set bed return timeout for " + bedReturnTimeoutMinutes + " minutes");
@@ -206,8 +166,8 @@ function setBedReturnTimeout(){
 			lightOn = false;
 			clearInterval(interval);
 			clearInterval(bedReturnTimeout);
-			button_led.pwmWrite(0);
-			message.sendTippedAlarm(bedReturnUUID);
+			button_led.digitalWrite(0);
+			message.sendBedReturnAlarm(message.bedReturnUUID);
 			bedReturnTimeoutMinutes = null;
 			storeBedReturnMoments();
 		} else {
@@ -241,9 +201,9 @@ function getBedReturnMoments(){
 				console.log(data);
 				var d = JSON.parse(data);
 				var millis1 = parseInt(d.lastWalk);
-				lastWalkMoment = moment(millis1).tz(timezone);
+				lastWalkMoment = moment(millis1).tz(message.bedReturnTimezone);
 				var millis2 = parseInt(d.lastButtonPush);
-				lastButtonPushMoment = moment(millis2).tz(timezone);
+				lastButtonPushMoment = moment(millis2).tz(message.bedReturnTimezone);
 				var minutes = parseInt(d.minutes);
 				bedReturnTimeoutMinutes = minutes;
 				
@@ -253,7 +213,7 @@ function getBedReturnMoments(){
 				} else {
 					console.log("no timeout in storage... turn light off");
 					lightOn = false;
-					button_led.pwmWrite(0);
+					button_led.digitalWrite(0);
 				}
 				
 				//console.log(millis1);
@@ -273,7 +233,7 @@ function getBedReturnMoments(){
 
 }
 
-getBedReturnMoments();
+
 
 
 
@@ -489,6 +449,7 @@ function startScan(){
 	
 	noble.on('warning',function(message){
 		console.log("Noble Warning: " + message);
+		disconnect();
 		noble.stopScanning();
 		startScan();
 	});
@@ -765,8 +726,8 @@ function handleData(device,data){
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		var walkMoment = moment([year+2000,month-1,day,hour,minute,0,0]).tz(timezone);
-		if (address == bedReturnUUID){
+		var walkMoment = moment([year+2000,month-1,day,hour,minute,0,0]).tz(message.bedReturnTimezone);
+		if (address == message.bedReturnUUID){
 			checkWalkMoment(walkMoment);
 		}
 		
@@ -812,8 +773,8 @@ function handleData(device,data){
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
 		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		var walkMoment = moment([year+2000,month-1,day,hour,minute,0,0]).tz(timezone);
-		if (address == bedReturnUUID){
+		var walkMoment = moment([year+2000,month-1,day,hour,minute,0,0]).tz(message.bedReturnTimezone);
+		if (address == message.bedReturnUUID){
 			checkWalkMoment(walkMoment);
 		}
 		
@@ -826,6 +787,7 @@ function handleData(device,data){
 	
 	return;
 }
+getBedReturnMoments();
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
 
