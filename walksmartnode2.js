@@ -46,7 +46,7 @@ var bedReturnTimeout = null;
 var bedReturnTimeoutMinutes = null;
 var interval = null;
 
-//bedReturnAlarm : true,
+//bedReturnAlert : true,
 //bedReturnUUID : '',
 //bedReturnThreshold: 15,
 //bedReturnTimezone: 'US/Central',
@@ -144,36 +144,46 @@ function checkWalkMoment(walkMoment){
 }
 
 function setBedReturnTimeout(){
-	if (!bedReturnTimeoutMinutes){
-		//bedReturnTimeoutMinutes = bedReturnAlertThreshold;
-		bedReturnTimeoutMinutes = message.bedReturnThreshold;
-	}
-	
-	console.log("set bed return timeout for " + bedReturnTimeoutMinutes + " minutes");
-	clearTimeout(bedReturnTimeout);
-	
-	if (lightOn == false){
-		turnOnLight();
-	}
-	
-	bedReturnTimeout = setInterval(function(){
-		
-		bedReturnTimeoutMinutes--;
-		console.log("another minute down: " + bedReturnTimeoutMinutes + " left");
-
-		if (bedReturnTimeoutMinutes < 1){
-			console.log("DID NOT RETURN TO BED!");
-			lightOn = false;
-			clearInterval(interval);
-			clearInterval(bedReturnTimeout);
-			button_led.digitalWrite(0);
-			message.sendBedReturnAlarm(message.bedReturnUUID);
-			bedReturnTimeoutMinutes = null;
-			storeBedReturnMoments();
-		} else {
-			storeBedReturnMoments();
+	if (message.bedReturnAlert){
+		if (!bedReturnTimeoutMinutes){
+			//bedReturnTimeoutMinutes = bedReturnAlertThreshold;
+			bedReturnTimeoutMinutes = message.bedReturnThreshold;
 		}
-	},60*1000);
+		
+		console.log("set bed return timeout for " + bedReturnTimeoutMinutes + " minutes");
+		clearTimeout(bedReturnTimeout);
+		
+		if (lightOn == false){
+			turnOnLight();
+		}
+		
+		bedReturnTimeout = setInterval(function(){
+			
+			bedReturnTimeoutMinutes--;
+			console.log("another minute down: " + bedReturnTimeoutMinutes + " left");
+
+			if (bedReturnTimeoutMinutes < 1){
+				console.log("DID NOT RETURN TO BED!");
+				lightOn = false;
+				clearInterval(interval);
+				clearInterval(bedReturnTimeout);
+				button_led.digitalWrite(0);
+				message.sendBedReturnAlarm(message.bedReturnUUID);
+				bedReturnTimeoutMinutes = null;
+				storeBedReturnMoments();
+			} else {
+				storeBedReturnMoments();
+			}
+		},60*1000);
+	} else {
+		console.log("Bed Return Alert not activated");
+		lightOn = false;
+		clearInterval(interval);
+		clearInterval(bedReturnTimeout);
+		button_led.digitalWrite(0);
+		bedReturnTimeoutMinutes = null;
+		storeBedReturnMoments();
+	}
 
 }
 

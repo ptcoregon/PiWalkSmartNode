@@ -10,9 +10,6 @@ var update = require('./update.js');
 var execSync = require('child_process').execSync;
 var moment = require('moment-timezone');
 
-
-//var self = require('./azure_iot_message.js');
-
 var fs = require('fs');
 var folder = '/home/pi/walk_objects/';
 
@@ -39,7 +36,7 @@ var self = module.exports = {
 	wearableAddresses: [],
 	walksmartAddresses: [],
 	
-	bedReturnAlarm : true,
+	bedReturnAlert : true,
 	bedReturnUUID : 'CF7915475177',
 	bedReturnThreshold: 15,
 	bedReturnTimezone: 'US/Central',
@@ -230,9 +227,9 @@ var self = module.exports = {
 				}
 				
 				try {
-					if (twin.properties.desired.bedReturnAlarm == true){
-						console.log("Turn on bed return alarm");
-						self.bedReturnAlarm = true;
+					if (twin.properties.desired.bedReturnAlert == true){
+						console.log("Turn on bed return alert");
+						self.bedReturnAlert = true;
 						var a = twin.properties.desired.bedReturnAddress;
 						var b = a.replace(/\'/g,'"');
 						self.bedReturnUUID = b;
@@ -243,8 +240,8 @@ var self = module.exports = {
 						self.bedReturnEndHour = parseInt(twin.properties.desired.bedReturnEndHour);
 						
 					} else {
-						console.log("Turn off bed return alarm");
-						self.bedReturnAlarm  = false;
+						console.log("Turn off bed return alert");
+						self.bedReturnAlert  = false;
 					}
 				} catch(e){
 					console.log(e);
