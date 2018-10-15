@@ -62,9 +62,9 @@ var firstDiscover = true;
 
 const Gpio = require('pigpio').Gpio;
 
-const button_led = new Gpio(14,{mode:Gpio.OUTPUT});
+const button_led = new Gpio(18,{mode:Gpio.OUTPUT});
 
-const button = new Gpio(3,{
+const button = new Gpio(4,{
 	mode: Gpio.INPUT,
 	pullUpDown: Gpio.PUD_DOWN,
 	edge: Gpio.EITHER_EDGE
