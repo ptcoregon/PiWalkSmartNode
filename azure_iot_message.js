@@ -482,8 +482,8 @@ var self = module.exports = {
 		});
 	},
 	
-	sendBedReturnAlarm: function(address){
-		var obj = {"address":address,"noBedReturn":"true","bedReturnThreshold":self.bedReturnThreshold};
+	sendBedReturnAlarm: function(address,lastWalk){
+		var obj = {"address":address,"noBedReturn":"true","bedReturnThreshold":self.bedReturnThreshold,"lastWalk":lastWalk};
 		var m = JSON.stringify(obj);
 		var message = new Message(m);
 		console.log("Sending Bed Return Alarm");

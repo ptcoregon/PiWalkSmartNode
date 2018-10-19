@@ -168,7 +168,7 @@ function setBedReturnTimeout(){
 				clearInterval(interval);
 				clearInterval(bedReturnTimeout);
 				button_led.digitalWrite(0);
-				message.sendBedReturnAlarm(message.bedReturnUUID);
+				message.sendBedReturnAlarm(message.bedReturnUUID,lastWalkMoment.toISOString());
 				bedReturnTimeoutMinutes = null;
 				storeBedReturnMoments();
 			} else {
