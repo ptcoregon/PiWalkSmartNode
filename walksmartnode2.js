@@ -540,9 +540,13 @@ function handleData(device,data){
 		var duration = 0;
 		var rotations = 0;
 		var best10 = 0;
+		var tipped = false;
+		if (data[9] == 0xFE){
+			tipped = true;	
+		}
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		var rssi = device.rssi;
-		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"batterylevel":self.batteryLevel}
+		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"tipped":tipped,"batterylevel":self.batteryLevel}
 		message.add(obj);
 		console.log(obj);
 		self.batteryLevel = 0;
