@@ -461,7 +461,7 @@ function getBatteryLevel(peripheral,chars){
 		battery_char.read(function(error,data){
 			if (error){
 				console.log("Error reading battery level");
-				getTZ(peripheral,chars);
+				getLiveDataMode(peripheral,chars);
 			} else {
 				console.log(data[0]);
 				console.log(data[1]);
@@ -470,13 +470,13 @@ function getBatteryLevel(peripheral,chars){
 				if (level > 150 && level < 350){
 					self.batteryLevel = level;
 				}
-				getTZ(peripheral,chars);
+				getLiveDataMode(peripheral,chars);
 			}
 		});
 	} else {
 		console.log("no battery char");
 		self.batteryLevel = 0;
-		getTZ(peripheral,chars);
+		getLiveDataMode(peripheral,chars);
 	}
 	
 }
