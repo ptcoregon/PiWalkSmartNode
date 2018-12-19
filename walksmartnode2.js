@@ -24,6 +24,9 @@ var batteryLevel = null;
 var data_service_uuid = '10';
 var data_char_uuid = '100';
 
+var live_data_service_uuid = '11';
+var live_data_enabled_char_uuid = '111';
+
 var info_service_uuid = '102';
 var battery_char_uuid = '103';
 var timezone_char_uuid = '2000';
@@ -334,8 +337,8 @@ function discoverServices(peripheral){
 	
 	console.log("discover services");
 
-	var serviceUUIDs = [data_service_uuid,info_service_uuid];
-	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid];
+	var serviceUUIDs = [data_service_uuid,info_service_uuid,live_data_enabled_service];
+	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid,live_data_enabled_char];
 	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
 	
 	
@@ -380,19 +383,49 @@ function getTZ(peripheral,chars) {
 			}
 			
 			var d = new Buffer(array);
-			
+
 			var timezone = d.toString();
 			console.log(timezone);
-			var now = moment().valueOf();
-			//console.log(now);
-			var tz = moment.tz.zone(timezone);
-			//console.log(tz);
-			var offset = tz.offset(now);
-			offset = offset/60;
-			//console.log(offset);
-			setUTC(peripheral,chars,offset);
+			
+			if (timezone !== 'US/Pacific'){
+				console.log("NOT THE RIGHT TIMEZONE!!!!");
+				var new_timezone = 'US/Pacific';
+				writeTZ(peripheral,chars,new_timezone);
+			} else {
+				console.log("Correct Timezone");
+				setUTC(peripheral,chars,timezone);
+			}
+			
+			
+			
+			
 		}
 	});
+}
+
+function writeTZ(peripheral,chars,timezone){
+	console.log("writeTZ");
+	var tz_char = null;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == timezone_char_uuid){
+			tz_char = chars[i];
+		}
+	}
+	
+	const tz = new Buffer(timezone, 'utf-8');
+	
+	tz_char.write(tz,false,function(error){
+		if (error){
+			console.log(err);
+			disconnect();	
+		} else {
+			console.log("Wrote correct timezone");
+			setUTC(peripheral,chars,timezone);
+		}
+		
+	});
+	
+	
 }
 
 function getBatteryLevel(peripheral,chars){
@@ -429,7 +462,15 @@ function getBatteryLevel(peripheral,chars){
 	
 }
 
-function setUTC(peripheral,chars,offset){
+function setUTC(peripheral,chars,timezone){
+	var now = moment().valueOf();
+	//console.log(now);
+	var tz = moment.tz.zone(timezone);
+	//console.log(tz);
+	var offset = tz.offset(now);
+	offset = offset/60;
+	//console.log(offset);
+	
 	console.log("offset: " + offset);
 	var m = moment().unix();
 	console.log(m);
