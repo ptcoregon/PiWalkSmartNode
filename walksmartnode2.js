@@ -271,11 +271,7 @@ function disconnect(){
 		console.log(e);
 	}
 	
-	var address = currentPeripheral.address.replace(/:/g,"").toUpperCase().trim();
 	
-	if (timezone_object[address] === null && address.length > 7){
-		getTimezoneFromServer(address);
-	}
 	
 	currentPeripheral = null;
 	this.batteryLevel = 0;
@@ -293,6 +289,15 @@ function connectToWalkSmart(peripheral){
 
 				led.blink(0);
 				events.setDisconnected();
+		
+				var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+				
+				if (timezone_object[address] === null && address.length > 7){
+					console.log("get timezone from server for " + address);
+					getTimezoneFromServer(address);
+				} else {
+					console.log("no need to get timezone");	
+				}
 				
 				noble.startScanning([],true,function(error){
 					if (error) console.log("Start Scanning Error: " + error);
