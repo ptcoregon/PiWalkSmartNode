@@ -401,11 +401,14 @@ function getTZ(peripheral,chars) {
 			var d = new Buffer(array);
 
 			var timezone = d.toString();
-			console.log(timezone);
 			
-			if (timezone !== 'US/Pacific'){
+			var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+			var new_timezone = timezone_object[address];
+			
+			console.log("Device timezone: " + timezone + " Server timezone: " + new_timezone);
+			
+			if (timezone !== new_timezone && new_timezone !== undefined){
 				console.log("NOT THE RIGHT TIMEZONE!!!!");
-				var new_timezone = 'US/Pacific';
 				writeTZ(peripheral,chars,new_timezone);
 			} else {
 				console.log("Correct Timezone");
