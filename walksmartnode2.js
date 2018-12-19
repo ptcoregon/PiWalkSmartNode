@@ -32,6 +32,8 @@ var battery_char_uuid = '103';
 var timezone_char_uuid = '2000';
 var utc_char_uuid = '2001';
 
+var timezone_object = {};
+
 
 var lastImmediateWalkAlertSent = 0;
 
@@ -268,9 +270,15 @@ function disconnect(){
 	} catch(e){
 		console.log(e);
 	}
+	
+	var address = currentPeripheral.address.replace(/:/g,"").toUpperCase().trim();
+	
+	if (timezone_object[address] === null && address.length > 7){
+		getTimezoneFromServer(address);
+	}
+	
 	currentPeripheral = null;
 	this.batteryLevel = 0;
-	
 }
 
 function connectToWalkSmart(peripheral){
@@ -623,6 +631,24 @@ function handleData(device,data){
 	
 	return;
 }
+
+function getTimezoneFromServer(address){
+	const https = require('https');
+
+	https.get('https://walksmart1.azurewebsites.net/api/getTimezone?ZUMO-API-VERSION=2.0.0&address=' + address, (res) => {
+	  console.log('statusCode:', res.statusCode);
+
+	  res.on('data', (d) => {
+	  	process.stdout.write(d);
+		console.log(d);
+	  });
+
+	}).on('error', (e) => {
+	  console.error(e);
+	});	
+}
+
+
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
 
