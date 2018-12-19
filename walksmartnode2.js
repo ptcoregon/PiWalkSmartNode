@@ -24,11 +24,16 @@ var batteryLevel = null;
 var data_service_uuid = '10';
 var data_char_uuid = '100';
 
+var live_data_service_uuid = '11';
+var live_data_enabled_char_uuid = '111';
+
 var info_service_uuid = '102';
 var battery_char_uuid = '103';
 var timezone_char_uuid = '2000';
 var utc_char_uuid = '2001';
 
+var timezone_object = {};
+var live_data_object = {};
 
 var lastImmediateWalkAlertSent = 0;
 
@@ -265,9 +270,11 @@ function disconnect(){
 	} catch(e){
 		console.log(e);
 	}
+	
+	
+	
 	currentPeripheral = null;
 	this.batteryLevel = 0;
-	
 }
 
 function connectToWalkSmart(peripheral){
@@ -282,6 +289,18 @@ function connectToWalkSmart(peripheral){
 
 				led.blink(0);
 				events.setDisconnected();
+		
+				var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+				
+				console.log(address);
+				console.log(timezone_object[address]);
+
+				if (timezone_object[address] === undefined && address.length > 7){
+					console.log("get timezone from server for " + address);
+					getTimezoneFromServer(address);
+				} else {
+					console.log("no need to get timezone");	
+				}
 				
 				noble.startScanning([],true,function(error){
 					if (error) console.log("Start Scanning Error: " + error);
@@ -334,8 +353,8 @@ function discoverServices(peripheral){
 	
 	console.log("discover services");
 
-	var serviceUUIDs = [data_service_uuid,info_service_uuid];
-	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid];
+	var serviceUUIDs = [data_service_uuid,info_service_uuid,live_data_service_uuid];
+	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid,live_data_enabled_char_uuid];
 	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
 	
 	
@@ -380,19 +399,52 @@ function getTZ(peripheral,chars) {
 			}
 			
 			var d = new Buffer(array);
-			
+
 			var timezone = d.toString();
-			console.log(timezone);
-			var now = moment().valueOf();
-			//console.log(now);
-			var tz = moment.tz.zone(timezone);
-			//console.log(tz);
-			var offset = tz.offset(now);
-			offset = offset/60;
-			//console.log(offset);
-			setUTC(peripheral,chars,offset);
+			
+			var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+			var new_timezone = timezone_object[address];
+			
+			console.log("Device timezone: " + timezone + " Server timezone: " + new_timezone);
+			
+			if (timezone !== new_timezone && new_timezone !== undefined){
+				console.log("NOT THE RIGHT TIMEZONE!!!!");
+				writeTZ(peripheral,chars,new_timezone);
+			} else {
+				console.log("Correct Timezone");
+				setUTC(peripheral,chars,timezone);
+			}
+			
+			
+			
+			
 		}
 	});
+}
+
+function writeTZ(peripheral,chars,timezone){
+	console.log("writeTZ");
+	var tz_char = null;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == timezone_char_uuid){
+			tz_char = chars[i];
+		}
+	}
+	
+	const tz = new Buffer(timezone, 'utf-8');
+	
+	tz_char.write(tz,false,function(error){
+		if (error){
+			console.log(err);
+			disconnect();	
+		} else {
+			console.log("Wrote correct timezone");
+			setUTC(peripheral,chars,timezone);
+		}
+		
+	});
+	
+	
 }
 
 function getBatteryLevel(peripheral,chars){
@@ -409,7 +461,7 @@ function getBatteryLevel(peripheral,chars){
 		battery_char.read(function(error,data){
 			if (error){
 				console.log("Error reading battery level");
-				getTZ(peripheral,chars);
+				getLiveDataMode(peripheral,chars);
 			} else {
 				console.log(data[0]);
 				console.log(data[1]);
@@ -418,18 +470,101 @@ function getBatteryLevel(peripheral,chars){
 				if (level > 150 && level < 350){
 					self.batteryLevel = level;
 				}
-				getTZ(peripheral,chars);
+				getLiveDataMode(peripheral,chars);
 			}
 		});
 	} else {
 		console.log("no battery char");
 		self.batteryLevel = 0;
-		getTZ(peripheral,chars);
+		getLiveDataMode(peripheral,chars);
 	}
 	
 }
 
-function setUTC(peripheral,chars,offset){
+function getLiveDataMode(peripheral,chars){
+	
+	var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+	var live = live_data_object[address];
+	
+	//console.log("Device mode: " + timezone + " Server timezone: " + new_timezone);
+			
+	if (live !== undefined){
+		self = this;
+		var live_data_enabled_char = undefined;
+		for (var i = 0; i < chars.length; i++){
+			if (chars[i].uuid == live_data_enabled_char_uuid){
+				live_data_enabled_char = chars[i];
+			}
+		}
+
+		if (live_data_enabled_char !== undefined){
+			console.log("get live_data_enabled_char");
+			live_data_enabled_char.read(function(error,data){
+				if (error){
+					console.log("Error reading live data char");
+					getTZ(peripheral,chars);
+				} else {
+					var enabled = data[0];
+					var d = 0;
+					if (live == true || live == 'true'){
+						var d = 1;	
+					}
+					
+					console.log("mode: " + enabled + " server mode: " + d);
+					if (enabled !== d){
+						console.log("write live data mode to " + d);
+						
+						const p = new Buffer([d], 'utf-8');
+						live_data_enabled_char.write(p,false,function(error){
+							if (error){
+								console.log(error);
+								disconnect();	
+							} else {
+								console.log("Wrote correct live data mode");
+								getTZ(peripheral,chars);
+							}
+						});	
+					} else {
+						console.log("Correct Live Data Mode");
+						getTZ(peripheral,chars);
+					}
+					
+					
+				}
+			});
+		} else {
+			console.log("could not read live data char");
+			getTZ(peripheral,chars);
+		}	
+		
+		
+	} else {
+		getTZ(peripheral,chars);	
+	}
+	
+}
+
+function writeLiveDataMode(peripheral,chars,live){
+	console.log("write live data");
+	var tz_char = null;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == timezone_char_uuid){
+			tz_char = chars[i];
+		}
+	}
+	
+	
+}
+
+function setUTC(peripheral,chars,timezone){
+	var now = moment().valueOf();
+	//console.log(now);
+	var tz = moment.tz.zone(timezone);
+	//console.log(tz);
+	var offset = tz.offset(now);
+	offset = offset/60;
+	//console.log(offset);
+	
 	console.log("offset: " + offset);
 	var m = moment().unix();
 	console.log(m);
@@ -582,6 +717,37 @@ function handleData(device,data){
 	
 	return;
 }
+
+function getTimezoneFromServer(address){
+	const https = require('https');
+
+	https.get('https://walksmart1.azurewebsites.net/api/getTimezone?ZUMO-API-VERSION=2.0.0&address=' + address, (res) => {
+	  console.log('statusCode:', res.statusCode);
+	  var data = '';
+	  res.on('data', (d) => {
+		data += d;
+	  	//process.stdout.write(d);
+		//console.log(d);
+	  });
+
+	  res.on('end',function(){
+		console.log(data);
+		var x = JSON.parse(data);
+		var address = x.id;
+		var timezone = x.Timezone;
+		var live = x.TherapyMode;
+		timezone_object[address] = timezone;
+		live_data_object[address] = live;
+		console.log(address + " to " + timezone);
+		console.log("live data is " + live);
+	 });
+
+	}).on('error', (e) => {
+	  console.error(e);
+	});	
+}
+
+
 wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 
 
