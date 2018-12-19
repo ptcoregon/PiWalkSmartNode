@@ -1,6 +1,6 @@
 {
   "name": "walksmart_node",
-  "version": "2.7.1",
+  "version": "2.7.2",
   "description": "nodejs for raspberry pi",
   "main": "walksmartnode2.js",
   "dependencies": {
