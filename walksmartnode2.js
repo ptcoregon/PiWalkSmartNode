@@ -33,7 +33,7 @@ var timezone_char_uuid = '2000';
 var utc_char_uuid = '2001';
 
 var timezone_object = {};
-
+var live_data_object = {};
 
 var lastImmediateWalkAlertSent = 0;
 
@@ -481,6 +481,79 @@ function getBatteryLevel(peripheral,chars){
 	
 }
 
+function getLiveDataMode(peripheral,chars){
+	
+	var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
+	var live = live_data_object[address];
+	
+	//console.log("Device mode: " + timezone + " Server timezone: " + new_timezone);
+			
+	if (live !== undefined){
+		self = this;
+		var live_data_enabled_char = undefined;
+		for (var i = 0; i < chars.length; i++){
+			if (chars[i].uuid == live_data_enabled_char_uuid){
+				live_data_enabled_char = chars[i];
+			}
+		}
+
+		if (live_data_enabled_char !== undefined){
+			console.log("get live_data_enabled_char");
+			live_data_enabled_char.read(function(error,data){
+				if (error){
+					console.log("Error reading live data char");
+					getTZ(peripheral,chars);
+				} else {
+					var enabled = data[0];
+					console.log("mode: " + enabled + " server mode: " + live);
+					if (enabled !== live){
+						console.log("write live data mode");
+						var d = 0;
+						if (live == true || live == 'true'){
+							var d = 1;	
+						}
+						const p = new Buffer([d], 'utf-8');
+						live_data_enabled_char.write(p,false,function(error){
+							if (error){
+								console.log(err);
+								disconnect();	
+							} else {
+								console.log("Wrote correct live data mode");
+								getTZ(peripheral,chars);
+							}
+						});	
+					} else {
+						console.log("Correct Live Data Mode");
+						getTZ(peripheral,chars);
+					}
+					
+					
+				}
+			});
+		} else {
+			console.log("could not read live data char");
+			getTZ(peripheral,chars);
+		}	
+		
+		
+	} else {
+		getTZ(peripheral,chars);	
+	}
+	
+}
+
+function writeLiveDataMode(peripheral,chars,live){
+	console.log("write live data");
+	var tz_char = null;
+	for (var i = 0; i < chars.length; i++){
+		if (chars[i].uuid == timezone_char_uuid){
+			tz_char = chars[i];
+		}
+	}
+	
+	
+}
+
 function setUTC(peripheral,chars,timezone){
 	var now = moment().valueOf();
 	//console.log(now);
@@ -660,8 +733,11 @@ function getTimezoneFromServer(address){
 		var x = JSON.parse(data);
 		var address = x.id;
 		var timezone = x.Timezone;
+		var live = x.TherapyMode;
 		timezone_object[address] = timezone;
+		live_object[address] = live;
 		console.log(address + " to " + timezone);
+		console.log("live data is " + live);
 	 });
 
 	}).on('error', (e) => {
