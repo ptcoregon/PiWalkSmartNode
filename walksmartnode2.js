@@ -292,7 +292,10 @@ function connectToWalkSmart(peripheral){
 		
 				var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
 				
-				if (timezone_object[address] === null && address.length > 7){
+				console.log(address);
+				console.log(timezone_object[address]);
+
+				if (timezone_object[address] === undefined && address.length > 7){
 					console.log("get timezone from server for " + address);
 					getTimezoneFromServer(address);
 				} else {
@@ -642,11 +645,21 @@ function getTimezoneFromServer(address){
 
 	https.get('https://walksmart1.azurewebsites.net/api/getTimezone?ZUMO-API-VERSION=2.0.0&address=' + address, (res) => {
 	  console.log('statusCode:', res.statusCode);
-
+	  var data = '';
 	  res.on('data', (d) => {
-	  	process.stdout.write(d);
-		console.log(d);
+		data += d;
+	  	//process.stdout.write(d);
+		//console.log(d);
 	  });
+
+	  res.on('end',function(){
+		console.log(data);
+		var x = JSON.parse(data);
+		var address = x.id;
+		var timezone = x.Timezone;
+		timezone_object[address] = timezone;
+		console.log(address + " to " + timezone);
+	 });
 
 	}).on('error', (e) => {
 	  console.error(e);
