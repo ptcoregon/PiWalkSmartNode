@@ -735,7 +735,7 @@ function getTimezoneFromServer(address){
 		var timezone = x.Timezone;
 		var live = x.TherapyMode;
 		timezone_object[address] = timezone;
-		live_object[address] = live;
+		live_data_object[address] = live;
 		console.log(address + " to " + timezone);
 		console.log("live data is " + live);
 	 });
