@@ -337,8 +337,8 @@ function discoverServices(peripheral){
 	
 	console.log("discover services");
 
-	var serviceUUIDs = [data_service_uuid,info_service_uuid,live_data_enabled_service];
-	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid,live_data_enabled_char];
+	var serviceUUIDs = [data_service_uuid,info_service_uuid,live_data_service_uuid];
+	var characteristicUUIDs = [data_char_uuid,timezone_char_uuid,utc_char_uuid,battery_char_uuid,live_data_enabled_char_uuid];
 	//peripheral.discoverAllServicesAndCharacteristics(function(error,services,characteristics){
 	
 	
