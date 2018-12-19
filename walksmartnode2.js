@@ -505,17 +505,19 @@ function getLiveDataMode(peripheral,chars){
 					getTZ(peripheral,chars);
 				} else {
 					var enabled = data[0];
-					console.log("mode: " + enabled + " server mode: " + live);
-					if (enabled !== live){
-						console.log("write live data mode");
-						var d = 0;
-						if (live == true || live == 'true'){
-							var d = 1;	
-						}
+					var d = 0;
+					if (live == true || live == 'true'){
+						var d = 1;	
+					}
+					
+					console.log("mode: " + enabled + " server mode: " + d);
+					if (enabled !== d){
+						console.log("write live data mode to " + d);
+						
 						const p = new Buffer([d], 'utf-8');
 						live_data_enabled_char.write(p,false,function(error){
 							if (error){
-								console.log(err);
+								console.log(error);
 								disconnect();	
 							} else {
 								console.log("Wrote correct live data mode");
