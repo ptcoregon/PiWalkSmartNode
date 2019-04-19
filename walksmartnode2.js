@@ -1,4 +1,7 @@
+var cellular = true;
+
 var wifi = require('./wifi_test.js');
+var hologram = require('./hologram.js');
 
 var led = require('./led.js');
 var buzzer = require('./buzzer.js');
@@ -597,11 +600,12 @@ function setUTC(peripheral,chars,timezone){
 }
 
 function setupDataTransfer(peripheral,chars){
-	
+	console.log("chars.length = " + chars.length);
 	var lastDataRead = new Buffer([0,0,0]);
 	
 	var data_char = undefined;
 	for (var i = 0; i < chars.length; i++){
+		console.log(chars[i].uuid);
 		if (chars[i].uuid == data_char_uuid){
 			data_char = chars[i];
 		}
@@ -747,8 +751,30 @@ function getTimezoneFromServer(address){
 	});	
 }
 
+function connectToCellular(){
+	var self = this;
+	if(hologram.isConnected()){
+		events.setWifiConnected();
+	} else {
+		console.log("hologram is not connected");
+		var hologram_connected = hologram.reconnect();
+		if (hologram_connected){
+			events.setWifiConnected();
+		} else {
+			console.log("disconnect and reset hologram");
+			hologram.disconnect();
+			hologram.reset();
+			hologram.reconnect();
+			self.connectToCellular();
+		}
+	}
+}
 
-wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
+if (cellular){
+	connectToCellular();
+} else {
+	wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
+}
 
 
 setInterval(function(){

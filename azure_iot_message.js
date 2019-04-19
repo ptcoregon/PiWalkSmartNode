@@ -1,7 +1,7 @@
-//var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
-var mqttws = require('azure-iot-device-mqtt').MqttWs;
+var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
+//var mqttws = require('azure-iot-device-mqtt').MqttWs;
 var Message = require('azure-iot-device').Message;
-var azure_iot_device = require('azure-iot-device');
+//var azure_iot_device = require('azure-iot-device');
 
 var events = require('./event_module.js');
 
@@ -58,7 +58,7 @@ var self = module.exports = {
 					
 					console.log("initializing iot messaging");
 					var connectionString = 'HostName=WalkSmart-Node-Hub-2.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
-					client = azure_iot_device.Client.fromConnectionString(connectionString,mqttws);
+					client = clientFromConnectionString(connectionString);
 
 					client.open(self.connectCallback);
 					
@@ -177,10 +177,10 @@ var self = module.exports = {
 				}
 			});
 			
-			client.onDeviceMethod('pull',self.pull);
-			client.onDeviceMethod('command',self.command);
-			client.onDeviceMethod('restart',self.restart);
-			client.onDeviceMethod('version',self.version);
+			//client.onDeviceMethod('pull',self.pull);
+			//client.onDeviceMethod('command',self.command);
+			//client.onDeviceMethod('restart',self.restart);
+			//client.onDeviceMethod('version',self.version);
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
 			//var message = new Message(data);
