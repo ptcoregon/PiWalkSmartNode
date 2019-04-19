@@ -20,7 +20,7 @@ var commands = {
 	dhcpRenew: 'sudo /sbin/dhclient -v ' + WLAN,
 	scanUtil: 'sudo /sbin/iwlist ' + WLAN + ' scan',
 	iwGetId: '/sbin/iwgetid -r',
-	getLocalIP: "sudo /sbin/ifconfig " + WLAN + " | grep 'inet addr' | cut -d: -f2 | awk '{print $1}'",
+	getLocalIP: "sudo /sbin/ifconfig " + WLAN + " | grep 'inet' | cut -d: -f2 | awk '{print $1}'",
 	getExternalIP: '/usr/bin/wget http://icanhazip.com -qO-',
 	getMacAddress: 'cat /sys/class/net/' + WLAN + '/address',
 	signalQuality: "/sbin/iwconfig wlan0 | grep -i --color quality | cut -d '=' -f 2 | cut -d '/' -f 1 | tr -d '\n'",
@@ -467,7 +467,9 @@ var wifi = {
 	 * @return {string} ip address or empty
      */	
 	getLocalIP: function() {
-		return execSync(commands.getLocalIP).toString().trim();
+		var ip = execSync(commands.getLocalIP).toString().trim();
+		console.log("local ip: " + ip);
+		return "10.1.0.0.0";
 	},
 	
 	/**
