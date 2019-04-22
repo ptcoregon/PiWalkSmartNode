@@ -254,12 +254,10 @@ var self = module.exports = {
 		console.log("add to file");
 		
 		storeObj = obj;
-		storeObj.serial = DeviceId;
-		
-		storeObj.id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
+		storeObj.s = DeviceId;
 		
 		
-		var filename = storeObj.id  + '.json';
+		var filename = storeObj.r  + '.json';
 
 		fs.writeFile(folder + filename,JSON.stringify(storeObj),function(error){
 			if (error) {console.log("write to file error: " + error);
@@ -356,7 +354,7 @@ var self = module.exports = {
 		//	if (err) console.log(err);
 		//});
 		
-		var id = obj["id"];
+		var id = obj["r"];
 		
 		//console.log("remove " + JSON.stringify(obj));
 		
@@ -381,7 +379,7 @@ var self = module.exports = {
 			text = "";
 		}
 		
-		var obj = {"serial":DeviceId,"timestamp":now,"address":0,"message":text};
+		var obj = {"s":DeviceId,"m":text};
 		
 		var m = JSON.stringify(obj);
 		
@@ -405,7 +403,7 @@ var self = module.exports = {
 	},
 	
 	sendWalkAlarm: function(address){
-		var obj = {"address":address,"walkalarm":"true"};
+		var obj = {"a":address,"w":"1"};
 		var m = JSON.stringify(obj);
 		var message = new Message(m);
 		console.log("Sending Alarm");
@@ -423,7 +421,7 @@ var self = module.exports = {
 	},
 	
 	sendTippedAlarm: function(address){
-		var obj = {"address":address,"tipped":"true"};
+		var obj = {"a":address,"t":"1"};
 		var m = JSON.stringify(obj);
 		var message = new Message(m);
 		console.log("Sending Tipped Alarm");
