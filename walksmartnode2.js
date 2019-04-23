@@ -1,4 +1,7 @@
+var cellular = true;
+
 var wifi = require('./wifi_test.js');
+var hologram = require('./hologram.js');
 
 var led = require('./led.js');
 var buzzer = require('./buzzer.js');
@@ -70,7 +73,12 @@ events.emitter.on("queueReady",function(){
 	
 	
   message.addStoredData();
-	wifi.startChecks();
+  if (cellular){
+	  hologram.startChecks();
+  } else {
+	  wifi.startChecks();
+  }
+	
 });
 
 events.emitter.on("startScanAnyway",function(){
@@ -196,7 +204,7 @@ function startScan(){
 						
 					}
 						
-				} else if (wifi.isConnected() && message.iot_hub_connected && currentPeripheral == null) {
+				} else if (message.iot_hub_connected && currentPeripheral == null) {
 					currentPeripheral = peripheral;
 					
 					noble.stopScanning();
@@ -597,11 +605,12 @@ function setUTC(peripheral,chars,timezone){
 }
 
 function setupDataTransfer(peripheral,chars){
-	
+	console.log("chars.length = " + chars.length);
 	var lastDataRead = new Buffer([0,0,0]);
 	
 	var data_char = undefined;
 	for (var i = 0; i < chars.length; i++){
+		console.log(chars[i].uuid);
 		if (chars[i].uuid == data_char_uuid){
 			data_char = chars[i];
 		}
@@ -641,6 +650,42 @@ function setupDataTransfer(peripheral,chars){
 function handleData(device,data){
 	//device is the name as peripheral
 	var self = this;
+	var obj;
+	var address = device.address.replace(/:/g,"").toUpperCase().trim();
+	
+	var str = address;
+	
+	if (data[0] < 50 || data[0] > 100){ //if false, we have a 62's array
+		if (data[10] > 10 && data[10] < 50){
+			for (var i = 0; i < 20; i++){
+				var b = data[i].toString(16);
+				if (b.length < 2){
+					b = "0" + b;
+				}
+				str = str + b;
+			}
+			console.log(str);
+			
+			obj = {"r":str};
+		} else {
+			for (var i = 0; i < 10; i++){
+				var b = data[i].toString(16);
+				if (b.length < 2){
+					b = "0" + b;
+				}
+				str = str + b;
+			}
+			console.log(str);
+			
+			obj = {"r":str};
+		}
+		console.log(obj);
+		
+		message.add(obj);
+	}
+	
+	
+	
 	if (data[0] > 10 && data[0] < 50)
 	{
 	
@@ -660,11 +705,11 @@ function handleData(device,data){
 		var rssi = device.rssi;
 		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		message.add(obj);
+		//message.add(obj);
 		
-		console.log(obj);
+		//console.log(obj);
 		
 	} else if (data[0] > 110 && data[0] < 150) { //WE HAVE A CHECKING FROM NO DATA
 		var year = (data[0] - 100)
@@ -681,9 +726,9 @@ function handleData(device,data){
 		}
 		var address = device.address.replace(/:/g,"").toUpperCase().trim();
 		var rssi = device.rssi;
-		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"tipped":tipped,"batterylevel":self.batteryLevel}
-		message.add(obj);
-		console.log(obj);
+		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"tipped":tipped,"batterylevel":self.batteryLevel}
+		//message.add(obj);
+		//console.log(obj);
 		self.batteryLevel = 0;
 	}
 	
@@ -706,11 +751,11 @@ function handleData(device,data){
 		var rssi = device.rssi;
 		
 		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
 		
-		message.add(obj);
+		//message.add(obj);
 
-		console.log(obj);
+		//console.log(obj);
 	}
 	
 	
@@ -747,8 +792,30 @@ function getTimezoneFromServer(address){
 	});	
 }
 
+function connectToCellular(){
+	var self = this;
+	if(hologram.isConnected()){
+		events.setWifiConnected();
+	} else {
+		console.log("hologram is not connected");
+		var hologram_connected = hologram.reconnect();
+		if (hologram_connected){
+			events.setWifiConnected();
+		} else {
+			console.log("disconnect and reset hologram");
+			hologram.disconnect();
+			hologram.reset();
+			hologram.reconnect();
+			connectToCellular();
+		}
+	}
+}
 
-wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
+if (cellular){
+	connectToCellular();
+} else {
+	wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
+}
 
 
 setInterval(function(){
