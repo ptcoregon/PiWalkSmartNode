@@ -162,7 +162,7 @@ var self = module.exports = {
 				
 				if (newVersion == "pull"){
 					console.log("pull message");
-					//update.update();	
+					update.update();	
 				} else if (newVersion == "reboot"){
 					 execSync('sudo reboot');
 				} else if (newVersion == "restart"){
@@ -282,34 +282,37 @@ var self = module.exports = {
 		fs.readdir(folder,function(error,files){
 			if (error) {console.log(error);}
 			else {
-				files.forEach(function(file){
-					console.log(file);
-					fs.readFile(folder + file,'utf-8',function(error,data){
-						if (error) console.log(error);
-						if (data) {
-							console.log(data);
-							try {
-								var obj = JSON.parse(data);
-								console.log("adding to message: " + obj.rotations);
-								self.addToMessage(obj);
-							} 
-							catch (e) {
-								console.log(e);
-								
-								fs.unlink(folder + file, function(err){
-									console.log(err);
-								});
-							}
+				var length = files.length;
+				var str = "";
+				for(var x = 0; x < files.length; x++){
+					console.log(files[x]);
+					var contents = fs.readFileSync(folder + files[x],'utf-8');
+					if (contents) {
+						console.log(contents);
+						try {
+							var obj = JSON.parse(contents);
+							str = str + obj.r + " ";
+						} 
+						catch (e) {
+							console.log(e);
 							
-							
-						} else {
-							fs.unlink(folder + file, function(err){
+							fs.unlink(folder + files[x], function(err){
 								console.log(err);
 							});
 						}
 						
-					});
-				});
+						
+					} else {
+						fs.unlink(folder + files[x], function(err){
+							console.log(err);
+						});
+					}
+				}
+				console.log("adding to message: " + str);
+				
+				var obj = {r:str,s:DeviceId};
+				
+				self.addToMessage(obj);
 			}
 		});
 		
@@ -331,7 +334,7 @@ var self = module.exports = {
 		
 		client.sendEvent(message,function(error,res){
 			if (!error){
-				console.log("Successfully Added: " + obj.rotations);
+				console.log("Successfully Added: " + obj.r);
 				addAttempts = 0;
 				self.removeFromStore(obj);
 				return true;
@@ -354,17 +357,30 @@ var self = module.exports = {
 		//	if (err) console.log(err);
 		//});
 		
-		var id = obj["r"];
+		var ids = obj["r"];
+		
+		var arr = ids.split(" ");
+		
+		for (var x = 0; x < arr.length; x++){
+			var id = arr[x].trim();
+			
+			if (id.length > 0){
+				var file = id + '.json';
+			
+				console.log("remove file: " + file);
+				
+				fs.unlink(folder + file, function(err){
+					if(err) console.log(err);
+				});
+			} else {
+				console.log("blank id");
+			}
+			
+		}
 		
 		//console.log("remove " + JSON.stringify(obj));
 		
-		var file = id + '.json';
 		
-		console.log("remove file: " + file);
-		
-		fs.unlink(folder + file, function(err){
-			if(err) console.log(err);
-		});
 		
 	},
 	
