@@ -1,7 +1,7 @@
-var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
-//var mqttws = require('azure-iot-device-mqtt').MqttWs;
+//var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
+var mqttws = require('azure-iot-device-mqtt').MqttWs;
 var Message = require('azure-iot-device').Message;
-//var azure_iot_device = require('azure-iot-device');
+var azure_iot_device = require('azure-iot-device');
 
 var events = require('./event_module.js');
 
@@ -58,7 +58,7 @@ var self = module.exports = {
 					
 					console.log("initializing iot messaging");
 					var connectionString = 'HostName=WalkSmart-Node-Hub-2.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
-					client = clientFromConnectionString(connectionString);
+					client = azure_iot_device.Client.fromConnectionString(connectionString,mqttws);
 
 					client.open(self.connectCallback);
 					
@@ -177,10 +177,10 @@ var self = module.exports = {
 				}
 			});
 			
-			//client.onDeviceMethod('pull',self.pull);
-			//client.onDeviceMethod('command',self.command);
-			//client.onDeviceMethod('restart',self.restart);
-			//client.onDeviceMethod('version',self.version);
+			client.onDeviceMethod('pull',self.pull);
+			client.onDeviceMethod('command',self.command);
+			client.onDeviceMethod('restart',self.restart);
+			client.onDeviceMethod('version',self.version);
 			
 			//var data = JSON.stringify([{'hello':'test'}]);
 			//var message = new Message(data);
@@ -254,10 +254,12 @@ var self = module.exports = {
 		console.log("add to file");
 		
 		storeObj = obj;
-		storeObj.s = DeviceId;
+		storeObj.serial = DeviceId;
+		
+		storeObj.id = "" + obj.address + obj.rotations + obj.duration + obj.year + obj.month + obj.day + obj.hour + obj.minute;
 		
 		
-		var filename = storeObj.r  + '.json';
+		var filename = storeObj.id  + '.json';
 
 		fs.writeFile(folder + filename,JSON.stringify(storeObj),function(error){
 			if (error) {console.log("write to file error: " + error);
@@ -354,7 +356,7 @@ var self = module.exports = {
 		//	if (err) console.log(err);
 		//});
 		
-		var id = obj["r"];
+		var id = obj["id"];
 		
 		//console.log("remove " + JSON.stringify(obj));
 		
@@ -379,7 +381,7 @@ var self = module.exports = {
 			text = "";
 		}
 		
-		var obj = {"s":DeviceId,"m":text};
+		var obj = {"serial":DeviceId,"timestamp":now,"address":0,"message":text};
 		
 		var m = JSON.stringify(obj);
 		
@@ -403,7 +405,7 @@ var self = module.exports = {
 	},
 	
 	sendWalkAlarm: function(address){
-		var obj = {"a":address,"w":"1"};
+		var obj = {"address":address,"walkalarm":"true"};
 		var m = JSON.stringify(obj);
 		var message = new Message(m);
 		console.log("Sending Alarm");
@@ -421,7 +423,7 @@ var self = module.exports = {
 	},
 	
 	sendTippedAlarm: function(address){
-		var obj = {"a":address,"t":"1"};
+		var obj = {"address":address,"tipped":"true"};
 		var m = JSON.stringify(obj);
 		var message = new Message(m);
 		console.log("Sending Tipped Alarm");
