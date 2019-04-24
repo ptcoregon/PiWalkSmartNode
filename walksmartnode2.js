@@ -49,7 +49,8 @@ var firstDiscover = true;
 
 events.emitter.on("wifiConnected", function() //wait until wifi is connected
 {
-	clock.update();
+	//clock.update();
+	events.setClockUpdated();
 	
 });
 
@@ -305,7 +306,7 @@ function connectToWalkSmart(peripheral){
 
 				if (timezone_object[address] === undefined && address.length > 7){
 					console.log("get timezone from server for " + address);
-					getTimezoneFromServer(address);
+					//getTimezoneFromServer(address); //TODO: Utilized messaging to add back in.
 				} else {
 					console.log("no need to get timezone");	
 				}
@@ -818,19 +819,19 @@ if (cellular){
 }
 
 
-setInterval(function(){
-	//console.log("Going");
-	if (message.iot_hub_connected){
-		message.sendNodeCheckin("still here");
-	}
+//setInterval(function(){
+	////console.log("Going");
+	//if (message.iot_hub_connected){
+		//message.sendNodeCheckin("still here");
+	//}
 	
-},(30*60000));
+//},(30*60000));
 
- setInterval(function(){
- 	var m = moment();
- 	if (m.minute() == 11){
- 		led.blink(0);
-		console.log("minute = 11 exit");
- 		process.exit();
- 	}
- },(60000));
+ //setInterval(function(){
+ 	//var m = moment();
+ 	//if (m.minute() == 11){
+ 		//led.blink(0);
+		//console.log("minute = 11 exit");
+ 		//process.exit();
+ 	//}
+ //},(60000));
