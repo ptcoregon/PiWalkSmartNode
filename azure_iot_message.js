@@ -1,6 +1,6 @@
-var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
+//var clientFromConnectionString = require('azure-iot-device-mqtt').clientFromConnectionString;
 //var mqttws = require('azure-iot-device-mqtt').MqttWs;
-var Message = require('azure-iot-device').Message;
+//var Message = require('azure-iot-device').Message;
 //var azure_iot_device = require('azure-iot-device');
 
 var events = require('./event_module.js');
@@ -21,6 +21,8 @@ var authFile = '/boot/iot-tokens.json';
 var client = null;
 
 var createAttempts = 0;
+
+var hologram = require('./hologram.js');
 
 
 
@@ -43,36 +45,6 @@ var self = module.exports = {
 	iot_hub_connected: false,
 
 	
-	initialize : function(){
-		var self = this;
-		
-		fs.readFile(authFile,'utf-8',function(err,data){
-			if (err){
-				console.log(err);
-			} else {
-				try {
-					console.log(data);
-					var obj = JSON.parse(data);
-					DeviceId = obj.DeviceId;
-					console.log(DeviceId);
-					
-					console.log("initializing iot messaging");
-					var connectionString = 'HostName=WalkSmart-Node-Hub-2.azure-devices.net;DeviceId=' + obj.DeviceId + ';SharedAccessKey=' + obj.SharedAccessKey;
-					client = clientFromConnectionString(connectionString);
-
-					client.open(self.connectCallback);
-					
-				} catch (e) {
-					throw e;
-				}
-			}
-			
-		});
-		
-		
-		
-		
-	},
 	
 	pull : function(request,response){
 		console.log("pull function");
@@ -291,7 +263,7 @@ var self = module.exports = {
 						console.log(contents);
 						try {
 							var obj = JSON.parse(contents);
-							str = str + obj.r + " ";
+							str = str + obj.r + "-";
 						} 
 						catch (e) {
 							console.log(e);
@@ -328,24 +300,23 @@ var self = module.exports = {
 		
 		//m = '[' + m + ']';
 		
-		var message = new Message(m);
-		
 		console.log("Sending Message");
 		
-		client.sendEvent(message,function(error,res){
-			if (!error){
-				console.log("Successfully Added: " + obj.r);
-				addAttempts = 0;
-				self.removeFromStore(obj);
-				return true;
-			} else {
-				console.log('Create Message Error: ');
-				console.log(error);
-				
-				events.setQueueError();				
-				
-			}
-		});
+		var success = hologram.send(m);
+		
+		if (success){
+			console.log("Successfully Added: " + obj.r);
+			addAttempts = 0;
+			self.removeFromStore(obj);
+			return true;
+		} else {
+			console.log('Create Message Error: ');
+			console.log(error);
+			
+			events.setQueueError();				
+			
+		}
+
 
 	},
 	
@@ -359,7 +330,7 @@ var self = module.exports = {
 		
 		var ids = obj["r"];
 		
-		var arr = ids.split(" ");
+		var arr = ids.split("-");
 		
 		for (var x = 0; x < arr.length; x++){
 			var id = arr[x].trim();
@@ -401,75 +372,27 @@ var self = module.exports = {
 		
 		//m = '[' + m + ']';
 		
-		var message = new Message(m);
-		
 		console.log("Sending Node Checkin");
 		
-		client.sendEvent(message,function(error,res){
-			if (!error){
-				console.log("Successfully Sent Node Checkin");
-				
-			} else {
-				console.log('Send Checkin Error: ');
-				console.log(error);
-				events.setQueueError();				
-				
-			}
-		});
+		hologram.send(m);
 	},
 	
 	sendWalkAlarm: function(address){
 		var obj = {"a":address,"w":"1"};
 		var m = JSON.stringify(obj);
-		var message = new Message(m);
-		console.log("Sending Alarm");
-		client.sendEvent(message,function(error,res){
-			if (!error){
-				console.log("Successfully Sent Immediate Walk Alarm");
-				return true;
-			} else {
-				console.log('Send Alarm Error: ');
-				console.log(error);
-				events.setQueueError();				
-				
-			}
-		});
+		hologram.send(m);
 	},
 	
 	sendTippedAlarm: function(address){
 		var obj = {"a":address,"t":"1"};
 		var m = JSON.stringify(obj);
-		var message = new Message(m);
-		console.log("Sending Tipped Alarm");
-		client.sendEvent(message,function(error,res){
-			if (!error){
-				console.log("Successfully Sent Tipped Alarm");
-				return true;
-			} else {
-				console.log('Send Alarm Error: ');
-				console.log(error);
-				events.setQueueError();				
-				
-			}
-		});
+		hologram.send(m);
 	},
 	
 	sendWearableAlarm: function(address){
 		var obj = {"address":address,"wearablealarm":"true"};
 		var m = JSON.stringify(obj);
-		var message = new Message(m);
-		console.log("Sending Wearable Alarm");
-		client.sendEvent(message,function(error,res){
-			if (!error){
-				console.log("Successfully Sent Wearable Alarm");
-				return true;
-			} else {
-				console.log('Send Alarm Error: ');
-				console.log(error);
-				events.setQueueError();				
-				
-			}
-		});
+		hologram.send(m);
 	}
 	
 }

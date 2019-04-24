@@ -1,6 +1,9 @@
+deviceID = 999;
+
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
 var fs = require('fs');
+var file = require('./file_store.js');
 
 const MAX_CONNECT_RETRIES = 1;
 
@@ -9,46 +12,55 @@ const ERR_START = 'Could not start hologram.';
 const ERR_STOP = 'Could not stop hologram.';
 	
 var commands = {
-	disconnect: 'sudo hologram network disconnect',
-	connect: 'sudo hologram network connect',
 	reset: 'sudo hologram modem reset',
-	getLocalIP: "sudo /sbin/ifconfig ppp0",
 }
+
+var busy = false;
 
 
 var hologram = {
-	
-	disconnect: function(){
-		var m = execSync(commands.disconnect);
-		return true;
-	},
-	
-	reconnect: function(){
-		var m = execSync(commands.connect);
-		console.log("reconnecting");
-		var x = this.isConnected();
-		console.log("connected? : " + x);
-		return x;
-	},
-	
+
 	reset: function(){
 		var m = execSync(commands.reset);
 		return true;
 	},
 	
+	send: function(message,callback){
+		busy = true;
+		try {
+			var str = deviceID + ":" + message;
+			console.log("sending via hologram...");
+			var m = exec('sudo hologram send "' + str + '"',function(error,stdout,stderr){
+				busy = false;
+				
+				if (error || stderr){
+					console.log(stderr);
+				} else {
+					console.log(stdout);
+					console.log(stderr);
+					
+					//var str = stdout.toString('utf8');
+					if (stdout.indexOf("RESPONSE MESSAGE: Message sent successfully") > -1){
+						console.log("Success");
+					} 
+					
+					callback(message);
+				}
+			});
+		} catch(e){
+			console.log(e);
+			busy = false;
+		}
+	},
+	
 	
 	isConnected: function(){
 		try {
-			var m = execSync(commands.getLocalIP);
+			var m = execSync("sudo hologram modem operator");
 			var str = m.toString('utf8');
-			var i = str.indexOf('inet addr:');
-			//console.log(i);
-			var ip = str.substr(i+10);
-			//console.log(ip);
-			var ip = ip.split(' ')[0];
-			//console.log(ip);
+			var i = str.indexOf('None');
 
-			if (ip.length > 5){
+			if (i < 0){
 				return true;
 			} else {
 				return false;
@@ -61,13 +73,13 @@ var hologram = {
 	startChecks: function(){
 		var self = this;
 		//check network connection every 30 seconds
-		setInterval(function(){
-			if (!self.isConnected()) //not connected
-			{
-				console.log("Cellular Disconnected!");
-				events.setQueueError();
-			}
-		},30000);
+		//setInterval(function(){
+			//if (!self.isConnected()) //not connected
+			//{
+				//console.log("Cellular Disconnected!");
+				//events.setQueueError();
+			//}
+		//},30000);
 	},
 	
 }

@@ -1,7 +1,8 @@
 var cellular = true;
 
 var wifi = require('./wifi_test.js');
-var hologram = require('./hologram.js');
+var file = require("./file_store.js");
+var network = require("./network.js");
 
 var led = require('./led.js');
 var buzzer = require('./buzzer.js');
@@ -10,7 +11,7 @@ buzzer.init();
 var bleData = require('./characteristics/wifi_data.js');
 var execSync = require('child_process').execSync;
 
-var message = require('./azure_iot_message.js');
+//var message = require('./azure_iot_message.js');
 var events = require('./event_module.js');
 var clock = require('./clock.js');
 
@@ -57,7 +58,8 @@ events.emitter.on("wifiConnected", function() //wait until wifi is connected
 events.emitter.on("clockUpdated", function() //wait until clock is updated or confirmed
 {
 	console.log("initialize iot messaging");
-	message.initialize();
+	//message.initialize();
+	events.setQueueReady();
 	
 });
 
@@ -68,17 +70,20 @@ events.emitter.on("queueReady",function(){
 	
 	noble = require('noble');
 	
-	var m = execSync('sudo hciconfig hci0 reset');
+	//var m = execSync('sudo hciconfig hci0 reset');
 	//console.log(m.toString('utf8'));
+	
+	file.getStoredData();
+	
 	startScan();
 	
 	
-  message.addStoredData();
-  if (cellular){
-	  hologram.startChecks();
-  } else {
-	  wifi.startChecks();
-  }
+  //message.addStoredData();
+  //if (cellular){
+	  //hologram.startChecks();
+  //} else {
+	  //wifi.startChecks();
+  //}
 	
 });
 
@@ -172,13 +177,13 @@ function startScan(){
 				console.log("Tipped: " + tipped);
 				
 				var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();		
-				var valid_address = message.walksmartAddresses.length == 0 || message.walksmartAddresses.indexOf(address) > -1;
+				var valid_address = true; //message.walksmartAddresses.length == 0 || message.walksmartAddresses.indexOf(address) > -1;
 				
 				if (tipped){
-					message.sendTippedAlarm(address);
-					currentPeripheral = peripheral;
-					
 					noble.stopScanning();
+					
+					network.sendTipAlert(address);
+					currentPeripheral = peripheral;
 					
 
 					console.log("connect!");
@@ -188,24 +193,24 @@ function startScan(){
 				} else if (walking){
 					console.log("Don't Connect!");
 					
-					if (valid_address){
-						console.log("valid");
-						WalkSmartWalkingTimestamp = Date.now();
+					//if (valid_address){
+						//console.log("valid");
+						//WalkSmartWalkingTimestamp = Date.now();
 					
-						var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
-						console.log(diff);
-						if (diff > 120 && message.sendWalkAlarms){
+						//var diff = moment().diff(lastImmediateWalkAlertSent,'seconds');
+						//console.log(diff);
+						//if (diff > 120 && message.sendWalkAlarms){
 							
-							lastImmediateWalkAlertSent = moment();
-							message.sendWalkAlarm(address);
-						} else {
-							console.log("Don't send walk alarm");
-						}
+							//lastImmediateWalkAlertSent = moment();
+							//message.sendWalkAlarm(address);
+						//} else {
+							//console.log("Don't send walk alarm");
+						//}
 						
 						
-					}
+					//}
 						
-				} else if (message.iot_hub_connected && currentPeripheral == null) {
+				} else if (currentPeripheral == null) {
 					currentPeripheral = peripheral;
 					
 					noble.stopScanning();
@@ -226,40 +231,7 @@ function startScan(){
 				//noble.stopScanning();
 			}
 			
-		} else if (name == "WalkSmartWear"){
-			var address = peripheral.address.replace(/:/g,"").toUpperCase().trim();
-			console.log("WalkSmartWear found");
-			
-			if (message.wearableAddresses.length == 0 || message.wearableAddresses.indexOf(address) > -1){
-				console.log("valid");
-				WearWalkingTimestamp = Date.now();
-				if (firstDiscover){
-					WalkSmartWalkingTimestamp = Date.now();
-					firstDiscover = false;
-				}
-			}
-			
-			var difference = WearWalkingTimestamp - WalkSmartWalkingTimestamp;
-		
-			if (difference > 5000 && message.wearableAlarm){
-				console.log("ALARM!!!!");
-				WalkSmartWalkingTimestamp = Date.now();
-				WearWalkingTimestamp = Date.now();
-				firstDiscover = true;
-				buzzer.buzz(3);
-				setTimeout(function(){led.blink(0)},3000);
-				//console.log("iot_hub_connected:" + message.iot_hub_connected);
-				if (message.iot_hub_connected){
-					console.log("send to server");
-					message.sendWearableAlarm(address);
-				}
-			}
-			
-			
-			
 		}
-		
-		
 		
 	});
 	
@@ -280,7 +252,7 @@ function disconnect(){
 		console.log(e);
 	}
 	
-	
+	file.getStoredData();
 	
 	currentPeripheral = null;
 	this.batteryLevel = 0;
@@ -313,7 +285,7 @@ function connectToWalkSmart(peripheral){
 				
 				noble.startScanning([],true,function(error){
 					if (error) console.log("Start Scanning Error: " + error);
-					message.addStoredData();
+					file.getStoredData();
 				});
 
 				
@@ -665,9 +637,7 @@ function handleData(device,data){
 				}
 				str = str + b;
 			}
-			console.log(str);
-			
-			obj = {"r":str};
+
 		} else {
 			for (var i = 0; i < 10; i++){
 				var b = data[i].toString(16);
@@ -676,88 +646,86 @@ function handleData(device,data){
 				}
 				str = str + b;
 			}
-			console.log(str);
-			
-			obj = {"r":str};
-		}
-		console.log(obj);
-		
-		message.add(obj);
-	}
-	
-	
-	
-	if (data[0] > 10 && data[0] < 50)
-	{
-	
-		var year = data[0];
-		var month = data[1];
-		var day = data[2];
-		var hour = data[3];
-		var minute = data[4];
-		
-		var duration = (data[5] << 8) | (data[6] << 0);
-		var rotations = (data[7] << 8) | (data[8] << 0);
-		
-		var best10 = data[9];
-		
-		var address = device.address.replace(/:/g,"").toUpperCase().trim();
-		
-		var rssi = device.rssi;
-		
-		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
-		
-		//message.add(obj);
-		
-		//console.log(obj);
-		
-	} else if (data[0] > 110 && data[0] < 150) { //WE HAVE A CHECKING FROM NO DATA
-		var year = (data[0] - 100)
-		var month = data[1];
-		var day = data[2];
-		var hour = data[3];
-		var minute = data[4];
-		var duration = 0;
-		var rotations = 0;
-		var best10 = 0;
-		var tipped = false;
-		if (data[9] == 0xFE){
-			tipped = true;	
-		}
-		var address = device.address.replace(/:/g,"").toUpperCase().trim();
-		var rssi = device.rssi;
-		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"tipped":tipped,"batterylevel":self.batteryLevel}
-		//message.add(obj);
-		//console.log(obj);
-		self.batteryLevel = 0;
-	}
-	
-	if (data[10] > 10 && data[10] < 50)
-	{
-	
-		var year = data[10];
-		var month = data[11];
-		var day = data[12];
-		var hour = data[13];
-		var minute = data[14];
-		
-		var duration = (data[15] << 8) | (data[16] << 0);
-		var rotations = (data[17] << 8) | (data[18] << 0);
-		
-		var best10 = data[19];
-		
-		var address = device.address.replace(/:/g,"").toUpperCase().trim();
-		
-		var rssi = device.rssi;
-		
-		//var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
-		//var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
-		
-		//message.add(obj);
 
-		//console.log(obj);
+		}
+		console.log(str);
+		
+		file.add(str);
 	}
+	
+	
+	
+	//if (data[0] > 10 && data[0] < 50)
+	//{
+	
+		//var year = data[0];
+		//var month = data[1];
+		//var day = data[2];
+		//var hour = data[3];
+		//var minute = data[4];
+		
+		//var duration = (data[5] << 8) | (data[6] << 0);
+		//var rotations = (data[7] << 8) | (data[8] << 0);
+		
+		//var best10 = data[9];
+		
+		//var address = device.address.replace(/:/g,"").toUpperCase().trim();
+		
+		//var rssi = device.rssi;
+		
+		////var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
+		////var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		
+		////message.add(obj);
+		
+		////console.log(obj);
+		
+	//} else if (data[0] > 110 && data[0] < 150) { //WE HAVE A CHECKING FROM NO DATA
+		//var year = (data[0] - 100)
+		//var month = data[1];
+		//var day = data[2];
+		//var hour = data[3];
+		//var minute = data[4];
+		//var duration = 0;
+		//var rotations = 0;
+		//var best10 = 0;
+		//var tipped = false;
+		//if (data[9] == 0xFE){
+			//tipped = true;	
+		//}
+		//var address = device.address.replace(/:/g,"").toUpperCase().trim();
+		//var rssi = device.rssi;
+		////var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10,"tipped":tipped,"batterylevel":self.batteryLevel}
+		////message.add(obj);
+		////console.log(obj);
+		//self.batteryLevel = 0;
+	//}
+	
+	//if (data[10] > 10 && data[10] < 50)
+	//{
+	
+		//var year = data[10];
+		//var month = data[11];
+		//var day = data[12];
+		//var hour = data[13];
+		//var minute = data[14];
+		
+		//var duration = (data[15] << 8) | (data[16] << 0);
+		//var rotations = (data[17] << 8) | (data[18] << 0);
+		
+		//var best10 = data[19];
+		
+		//var address = device.address.replace(/:/g,"").toUpperCase().trim();
+		
+		//var rssi = device.rssi;
+		
+		////var obj = {"address": "C449C2FA3DB2", "rotations" : 11, "duration": 17, "year":17,"month":3,"day":19,"hour":7,"minute":13}
+		////var obj = {"address": address, "rssi":rssi, "rotations" : rotations, "duration": duration, "year":year,"month":month,"day":day,"hour":hour,"minute":minute,"best10":best10}
+		
+		////message.add(obj);
+
+		////console.log(obj);
+	//}
 	
 	
 	
@@ -793,27 +761,9 @@ function getTimezoneFromServer(address){
 	});	
 }
 
-function connectToCellular(){
-	var self = this;
-	if(hologram.isConnected()){
-		events.setWifiConnected();
-	} else {
-		console.log("hologram is not connected");
-		var hologram_connected = hologram.reconnect();
-		if (hologram_connected){
-			events.setWifiConnected();
-		} else {
-			console.log("disconnect and reset hologram");
-			hologram.disconnect();
-			hologram.reset();
-			hologram.reconnect();
-			connectToCellular();
-		}
-	}
-}
-
 if (cellular){
-	connectToCellular();
+	//connectToCellular();
+	events.setQueueReady();
 } else {
 	wifi.setup(); //try to connect to wifi, and if it can't, start advertising on BLE
 }
