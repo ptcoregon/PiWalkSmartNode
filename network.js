@@ -5,7 +5,7 @@ var self = module.exports = {
 	
 	sendMessage: function(m){
 		var self = this;
-		if (!hologram.busy){
+		if (!hologram.isBusy()){
 			if (m.length > 0){
 				hologram.send(m,function(data){
 					console.log("send callback");

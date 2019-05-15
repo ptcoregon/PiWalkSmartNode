@@ -104,12 +104,14 @@ events.emitter.once("cellularError",function(){
 	
 	var checks = setInterval(
 		function(){
-			hologram.reset();
 			var con = hologram.isConnected();
 			if (con){
 				clearInterval(checks);
-				led.blink();
+				led.setOff();
 				events.setWifiConnected();
+			} else {
+				console.log("reset modem");
+				hologram.reset();
 			}
 		},10000);
 	
@@ -798,11 +800,11 @@ if (cellular){
 	
 //},(30*60000));
 
- //setInterval(function(){
- 	//var m = moment();
- 	//if (m.minute() == 11){
- 		//led.blink(0);
-		//console.log("minute = 11 exit");
- 		//process.exit();
- 	//}
- //},(60000));
+ setInterval(function(){
+ 	var m = moment();
+ 	if (m.minute() == 11 && m.hour() == 12){
+ 		led.blink(0);
+		console.log("minute = 11 hour == 12 exit");
+ 		process.exit();
+ 	}
+ },(60000));

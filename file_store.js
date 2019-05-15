@@ -28,7 +28,7 @@ var self = module.exports = {
 			else {
 				var length = files.length;
 				var str = "";
-				for(var x = 0; x < files.length; x++){
+				for(var x = 0; x < files.length && x < 5; x++){ //can't add too much to string... 432 char max AT send
 					console.log(files[x]);
 					var contents = fs.readFileSync(folder + files[x],'utf-8');
 					if (contents) {
@@ -39,7 +39,7 @@ var self = module.exports = {
 						});
 					}
 				}
-				console.log("from files: " + str);
+				//console.log("from files: " + str);
 
 				if (str.length > 0){
 					network.sendMessage(str);
@@ -63,13 +63,19 @@ var self = module.exports = {
 				console.log("remove file: " + file);
 				
 				fs.unlink(folder + file, function(err){
-					if(err) console.log(err);
+					if(err) console.log("could not remove");
 				});
 			} else {
 				console.log("blank id");
 			}
 			
 		}
+
+		var self = this;
+		setTimeout(function(){
+			self.getStoredData();
+		},1000);
+		
 
 	},
 	

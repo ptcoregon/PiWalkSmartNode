@@ -51,6 +51,16 @@ module.exports = {
 			if(err) throw err;
 		});
 	},
+	setOff: function(){
+		
+		if (int) clearInterval(int);
+		if (to) clearTimeout(to);
+		
+		interval = 0;
+		gpio.write(8,false,function(err){
+			if(err) throw err;
+		});
+	},
 	init: function(){
 		console.log("init led");
 		gpio.setup(8,gpio.DIR_OUT,gpio.EDGE_NONE,function(error){

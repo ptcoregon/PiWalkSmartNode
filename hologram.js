@@ -28,6 +28,10 @@ var hologram = {
 		return true;
 	},
 	
+	isBusy: function(){
+		return busy;
+	},
+	
 	send: function(message,callback){
 		busy = true;
 		try {
@@ -37,13 +41,13 @@ var hologram = {
 				busy = false;
 				
 				if (error || stderr){
-					console.log("Sending error: " + stderr);
+					console.log("Sending error");
 					busy = true;
 					var m = exec('sudo hologram send "' + str + '"',function(error,stdout,stderr){
 						busy = false;
 						
 						if (error || stderr){
-							console.log("Sending error 2: " + stderr);
+							console.log("Sending error 2");
 							events.setCellularError();
 						} else {
 							console.log(stdout);
@@ -51,7 +55,7 @@ var hologram = {
 							
 							//var str = stdout.toString('utf8');
 							if (stdout.indexOf("RESPONSE MESSAGE: Message sent successfully") > -1){
-								console.log("Success");
+								console.log("Successfully sent to cloud on 2nd attempt");
 							} 
 							
 							callback(message);
@@ -60,12 +64,10 @@ var hologram = {
 					
 					
 				} else {
-					console.log(stdout);
-					console.log(stderr);
 					
 					//var str = stdout.toString('utf8');
 					if (stdout.indexOf("RESPONSE MESSAGE: Message sent successfully") > -1){
-						console.log("Success");
+						console.log("Successfully sent to cloud");
 					} 
 					
 					callback(message);
@@ -86,6 +88,8 @@ var hologram = {
 			//console.log("operator: " + str.length);
 
 			if (i < 0 && str.length > 2){
+				console.log("connected");
+				require("./led.js").setOff();
 				return true;
 			} else {
 				return false;
