@@ -5,6 +5,8 @@ var execSync = require('child_process').execSync;
 var fs = require('fs');
 var file = require('./file_store.js');
 
+var events = require('./event_module.js');
+
 const MAX_CONNECT_RETRIES = 1;
 
 const ERR_CONNECT = 'Could not connect to hologram.';
@@ -22,6 +24,7 @@ var hologram = {
 
 	reset: function(){
 		var m = execSync(commands.reset);
+		//console.log("done resetting modem");
 		return true;
 	},
 	
@@ -34,7 +37,28 @@ var hologram = {
 				busy = false;
 				
 				if (error || stderr){
-					console.log(stderr);
+					console.log("Sending error: " + stderr);
+					busy = true;
+					var m = exec('sudo hologram send "' + str + '"',function(error,stdout,stderr){
+						busy = false;
+						
+						if (error || stderr){
+							console.log("Sending error 2: " + stderr);
+							events.setCellularError();
+						} else {
+							console.log(stdout);
+							console.log(stderr);
+							
+							//var str = stdout.toString('utf8');
+							if (stdout.indexOf("RESPONSE MESSAGE: Message sent successfully") > -1){
+								console.log("Success");
+							} 
+							
+							callback(message);
+						}
+					});
+					
+					
 				} else {
 					console.log(stdout);
 					console.log(stderr);
@@ -59,8 +83,9 @@ var hologram = {
 			var m = execSync("sudo hologram modem operator");
 			var str = m.toString('utf8');
 			var i = str.indexOf('None');
+			//console.log("operator: " + str.length);
 
-			if (i < 0){
+			if (i < 0 && str.length > 2){
 				return true;
 			} else {
 				return false;

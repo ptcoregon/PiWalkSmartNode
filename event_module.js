@@ -36,6 +36,11 @@ module.exports =
 		this.emitter.emit("queueError");
 	},
 	
+	setCellularError: function(){
+		console.log("cellular error");
+		this.emitter.emit("cellularError");
+	},
+	
 	setConnected: function(){
 		console.log("set walksmart connected");
 		connected = true;

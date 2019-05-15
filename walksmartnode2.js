@@ -3,6 +3,7 @@ var cellular = true;
 var wifi = require('./wifi_test.js');
 var file = require("./file_store.js");
 var network = require("./network.js");
+var hologram = require("./hologram.js");
 
 var led = require('./led.js');
 var buzzer = require('./buzzer.js');
@@ -93,6 +94,26 @@ events.emitter.on("startScanAnyway",function(){
 	var m = execSync('sudo hciconfig hci0 reset');
 	//console.log(m.toString('utf8'));
 	startScan();
+});
+
+events.emitter.once("cellularError",function(){
+	led.setOn();
+	noble.stopScanning();
+	
+	console.log('start the cellular checks');
+	
+	var checks = setInterval(
+		function(){
+			hologram.reset();
+			var con = hologram.isConnected();
+			if (con){
+				clearInterval(checks);
+				led.blink();
+				events.setWifiConnected();
+			}
+		},10000);
+	
+	
 });
 
 events.emitter.once("queueError",function()
