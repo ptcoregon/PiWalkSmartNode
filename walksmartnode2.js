@@ -559,11 +559,17 @@ function writeLiveDataMode(peripheral,chars,live){
 function setUTC(peripheral,chars,timezone){
 	var now = moment().valueOf();
 	//console.log(now);
-	var tz = moment.tz.zone(timezone);
-	//console.log(tz);
-	var offset = tz.offset(now);
-	offset = offset/60;
-	//console.log(offset);
+	var offset = 99;
+	try {
+		var tz = moment.tz.zone(timezone);
+		//console.log(tz);
+		offset = tz.offset(now);
+		offset = offset/60;
+		//console.log(offset);
+	} catch (e){
+		console.log("error with timezone, do not set offset");
+		offset = 99;
+	}
 	
 	console.log("offset: " + offset);
 	var m = moment().unix();
