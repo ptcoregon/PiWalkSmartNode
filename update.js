@@ -36,10 +36,11 @@ module.exports = {
 	},
 	
 	update : function(){
-		led.blink(3000);
-		execSync('cd /home/pi');
-		execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
-		execSync('sudo reboot');	
+		//led.blink(3000);
+		//execSync('cd /home/pi');
+		execSync('cd /home/pi/PiWalkSmartNode && git pull && npm install && sudo reboot');
+		//execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
+		//execSync('sudo reboot');	
 	}
 	
 }
