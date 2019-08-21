@@ -78,9 +78,12 @@ var self = module.exports = {
 		console.log("pull function");
 		//console.log(request);
 		response.send(200,"starting pull from github",function(err){
-			console.log(err);
+			if (err){
+				console.log(err);
+			}
+			update.updateNew();
 		});
-		update.updateNew();
+		
 		
 	},
 	
