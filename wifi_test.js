@@ -7,7 +7,8 @@ var events = require('./event_module.js');
 
 var reconnectingFlag = false;
 
-module.exports = { 
+
+module.exports = {
 	
 	
 	setup : function(){
@@ -15,6 +16,8 @@ module.exports = {
 		var emitter = this.emitter;
 	
 		console.log("start wifi");
+		
+		
 
 		if (!wifi.isConnected()) //not connected
 		{
@@ -37,7 +40,7 @@ module.exports = {
 					events.setWifiConnected();
 				}
 				
-			}, 12000);
+			}, 20000);
 			
 		} else {
 			//console.log(typeof emitter);
@@ -53,7 +56,7 @@ module.exports = {
 				console.log(bleData.newSSID);
 				console.log(bleData.password);
 				
-				wifi.connect(bleData.newSSID,bleData.password);
+				wifi.connect(bleData.newSSID,bleData.password,0);
 				reconnectingFlag = true;
 				
 				setTimeout(function(){ //wait for connection
@@ -77,7 +80,7 @@ module.exports = {
 						led.setOn();
 					}
 					
-				}, 12000);
+				}, 15000);
 			}
 			
 		});

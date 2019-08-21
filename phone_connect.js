@@ -32,7 +32,8 @@ var exports = module.exports = {
 			bleno.stopAdvertising();
 			bleno = undefined;
 			led.blink(0);
-			events.startScanAnyway();
+			//events.startScanAnyway();
+			process.exit();
 			
 		},120000);
 		

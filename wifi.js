@@ -74,6 +74,9 @@ var wifi = {
 	},
 	
 	reconnect: function(){
+		
+		this.addWiFiFromFile();
+		
 		var m = execSync(commands.wpaCli + ' reconnect');
 		console.log("reconnecting");
 		
@@ -84,8 +87,54 @@ var wifi = {
 		{
 			return true;
 		} else {
-			return false;
+			m = execSync(commands.wpaCli + ' reconnect');
+			console.log("reconnecting again");
+			
+			str = m.toString('utf8');
+			response = str.split('\n')[1]
+			console.log(response);
+			if (response == "OK"){
+				return true;
+			} else {
+				return false;
+			}
 		}
+	},
+	
+	addWiFiFromFile: function(){
+		try {
+			var fs = require('fs');
+			var wifiFile = '/boot/wifi.json';
+			var data = fs.readFileSync(wifiFile,'utf-8');
+
+			try {
+				console.log(data);
+				var obj = JSON.parse(data);
+				ssid = obj.network;
+				psk = obj.password;
+				console.log(ssid);
+				console.log(psk);
+				var response = execSync(commands.wpaCli + ' set_network 1 ssid \'"' + ssid + '"\'').toString().split('\n')[1];
+				if (response == "FAIL"){
+					this.connect(ssid,psk,1);
+				} else {
+					if (psk.length > 0){
+						execSync(commands.wpaCli + ' set_network 1 psk \'"' + psk + '"\'');
+					} else {
+						execSync(commands.wpaCli + ' set_network 1 key_mgmt NONE');
+					}
+					execSync(commands.wpaCli + ' save_config');
+					console.log("done getting wifi from file");
+				}
+				
+			} catch (e) {
+				console.log(e);
+			}
+
+		} catch(e){
+			console.log("ERROR ADDING WIFI FROM FILE");
+		}
+		
 	},
 	
 
@@ -97,7 +146,7 @@ var wifi = {
 	 *
 	 * @return {boolean} returns true if no errors
      */	
-	connect: function(ssid, psk) {
+	connect: function(ssid, psk, netId) {
 		
 		return new Promise((resolve, reject) => {
 			
@@ -107,8 +156,6 @@ var wifi = {
 				if(started) {
 					wifi.disconnect();
 					//remove existing networks
-					execSync(commands.wpaCli + ' remove_network 0');
-					execSync(commands.wpaCli + ' remove_network 1');
 					execSync(commands.wpaCli + ' remove_network 2');
 					execSync(commands.wpaCli + ' remove_network 3');
 					execSync(commands.wpaCli + ' remove_network 4');
@@ -116,7 +163,85 @@ var wifi = {
 					execSync(commands.wpaCli + ' remove_network 6');
 					execSync(commands.wpaCli + ' remove_network 7');
 					execSync(commands.wpaCli + ' remove_network 8');
+					
 					execSync(commands.wpaCli + ' save_config');
+					
+					if (netId === undefined || netId === null || netId > 1){
+						console.log("we set nedId to 1");
+						netId = 1;
+					}
+					
+					
+					var network_0_exists = execSync(commands.wpaCli + ' get_network 0 ssid').toString().split('\n')[1];
+					var network_1_exists = execSync(commands.wpaCli + ' get_network 1 ssid').toString().split('\n')[1];
+
+					//if (network_0_exists == "FAIL"){
+						//var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
+						//console.log(netId);
+					//}
+					
+					if (network_1_exists == "FAIL"){
+						var new_netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
+						
+						console.log("new_netId: " + new_netId);
+						if (new_netId == 0){
+							execSync(commands.wpaCli + ' set_network 0 ssid \'"placeholder"\'');
+							execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
+							execSync(commands.wpaCli + ' set_network 1 ssid \'"placeholder"\'');
+						} else if (new_netId == 1){
+							console.log("made network_1");
+							execSync(commands.wpaCli + ' set_network 1 ssid \'"placeholder"\'');
+						} else if (new_netId > 1){
+							console.log("remove ALL networks");
+							execSync(commands.wpaCli + ' remove_network 0');
+							execSync(commands.wpaCli + ' remove_network 1');
+							execSync(commands.wpaCli + ' remove_network 2');
+							execSync(commands.wpaCli + ' remove_network 3');
+							execSync(commands.wpaCli + ' remove_network 4');
+							execSync(commands.wpaCli + ' remove_network 5');
+							execSync(commands.wpaCli + ' remove_network 6');
+							execSync(commands.wpaCli + ' remove_network 7');
+							execSync(commands.wpaCli + ' remove_network 8');
+							
+							execSync(commands.wpaCli + ' add_network');
+							execSync(commands.wpaCli + ' set_network 0 ssid \'"placeholder"\'');
+							
+							execSync(commands.wpaCli + ' add_network');
+							execSync(commands.wpaCli + ' set_network 1 ssid \'"placeholder"\'');
+							
+						}
+						
+						execSync(commands.wpaCli + ' save_config');
+						
+						this.addWiFiFromFile();
+					}
+					
+					if (network_0_exists == "FAIL"){
+						console.log("network 0 does not exist");
+						console.log("remove ALL networks");
+						execSync(commands.wpaCli + ' remove_network 0');
+						execSync(commands.wpaCli + ' remove_network 1');
+						execSync(commands.wpaCli + ' remove_network 2');
+						execSync(commands.wpaCli + ' remove_network 3');
+						execSync(commands.wpaCli + ' remove_network 4');
+						execSync(commands.wpaCli + ' remove_network 5');
+						execSync(commands.wpaCli + ' remove_network 6');
+						execSync(commands.wpaCli + ' remove_network 7');
+						execSync(commands.wpaCli + ' remove_network 8');
+						
+						execSync(commands.wpaCli + ' add_network');
+						execSync(commands.wpaCli + ' set_network 0 ssid \'"placeholder"\'');
+						
+						execSync(commands.wpaCli + ' add_network');
+						execSync(commands.wpaCli + ' set_network 1 ssid \'"placeholder"\'');
+						
+						execSync(commands.wpaCli + ' save_config');
+						
+						this.addWiFiFromFile();
+					}
+					
+					
+					
 					
 					/*
 					// add network via wpa_cli
@@ -142,8 +267,9 @@ var wifi = {
 					* */
 					
 					// add network via wpa_cli
-					var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
-					console.log(netId);
+					
+					//var netId = execSync(commands.wpaCli + ' add_network').toString().split('\n')[1];
+					//console.log(netId);
 					// set the SSID
 					try {
 						var status = execSync(commands.wpaCli + ' set_network ' + netId + ' ssid \'"' + ssid + '"\'');
