@@ -80,7 +80,17 @@ var self = module.exports = {
 		response.send(200,"starting pull from github",function(err){
 			console.log(err);
 		});
-		update.update();
+		update.updateNew();
+		
+	},
+	
+	updateOld : function(request,response){
+		console.log("update old function");
+		//console.log(request);
+		response.send(200,"starting install from github",function(err){
+			console.log(err);
+		});
+		update.updateOld();
 		
 	},
 	
@@ -178,6 +188,7 @@ var self = module.exports = {
 			});
 			
 			client.onDeviceMethod('pull',self.pull);
+			client.onDeviceMethod('updateOld',self.updateOld);
 			client.onDeviceMethod('command',self.command);
 			client.onDeviceMethod('restart',self.restart);
 			client.onDeviceMethod('version',self.version);

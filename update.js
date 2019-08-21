@@ -35,12 +35,26 @@ module.exports = {
 
 	},
 	
-	update : function(){
+	updateNew : function(){
 		//led.blink(3000);
 		//execSync('cd /home/pi');
-		execSync('cd /home/pi/PiWalkSmartNode && git pull && npm install && sudo reboot');
-		//execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
-		//execSync('sudo reboot');	
+		
+		const fs = require("fs");
+		if (fs.exists("/home/pi/PiWalkSmartNode/package.json")){
+			execSync('cd /home/pi/PiWalkSmartNode && git pull && npm install && sudo reboot');
+		} else {
+			execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
+			execSync('sudo reboot');	
+		}
+		
+	},
+	
+	updateOld : function(){
+		//led.blink(3000);
+		//execSync('cd /home/pi');
+		execSync('sudo npm install git+https://git@github.com/ptcoregon/PiWalkSmartNode.git');
+		execSync('sudo reboot');	
+		
 	}
 	
 }
